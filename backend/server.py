@@ -40,6 +40,9 @@ from routes.users import router as users_router, set_db as users_set_db
 from routes.videos import router as videos_router, set_db as videos_set_db
 from routes.discover import router as discover_router, set_db as discover_set_db
 from routes.messages import router as messages_router, set_db as messages_set_db
+from routes.live import router as live_router, set_db as live_set_db
+from routes.wallet import router as wallet_router, set_db as wallet_set_db
+from routes.gifts import router as gifts_router, set_db as gifts_set_db
 
 # Set DB references
 auth_set_db(db)
@@ -47,6 +50,9 @@ users_set_db(db)
 videos_set_db(db)
 discover_set_db(db)
 messages_set_db(db)
+live_set_db(db)
+wallet_set_db(db)
+gifts_set_db(db)
 
 # Include routers
 app.include_router(auth_router)
@@ -54,6 +60,9 @@ app.include_router(users_router)
 app.include_router(videos_router)
 app.include_router(discover_router)
 app.include_router(messages_router)
+app.include_router(live_router)
+app.include_router(wallet_router)
+app.include_router(gifts_router)
 
 # Serve uploaded files
 UPLOAD_DIR = os.path.join(ROOT_DIR, "uploads")
@@ -89,6 +98,11 @@ async def startup():
     await db.messages.create_index([("conversationId", 1), ("createdAt", -1)])
     await db.comment_replies.create_index("parentId")
     await db.comment_likes.create_index([("userId", 1), ("commentId", 1)], unique=True)
+    await db.livestreams.create_index([("active", -1), ("viewers", -1)])
+    await db.livestreams.create_index("userId")
+    await db.live_chat.create_index([("streamId", 1), ("createdAt", -1)])
+    await db.transactions.create_index([("userId", 1), ("createdAt", -1)])
+    await db.gifts.create_index("cost")
     logger.info("KdM API started - indexes created")
 
 

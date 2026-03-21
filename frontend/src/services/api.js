@@ -92,4 +92,45 @@ export const messagesAPI = {
   sendMessage: (conversationId, text) => api.post(`/messages/conversations/${conversationId}/messages?text=${encodeURIComponent(text)}`),
 };
 
+// ---- Live Streaming ----
+export const liveAPI = {
+  startStream: (title, category = 'other') => api.post(`/live/start?title=${encodeURIComponent(title)}&category=${category}`),
+  endStream: (streamId) => api.post(`/live/${streamId}/end`),
+  getActiveStreams: () => api.get('/live/active'),
+  getStream: (streamId) => api.get(`/live/${streamId}`),
+  joinStream: (streamId) => api.post(`/live/${streamId}/join`),
+  leaveStream: (streamId) => api.post(`/live/${streamId}/leave`),
+  likeStream: (streamId) => api.post(`/live/${streamId}/like`),
+  getChat: (streamId, after = '') => api.get(`/live/${streamId}/chat?after=${after}`),
+  sendChat: (streamId, text) => api.post(`/live/${streamId}/chat?text=${encodeURIComponent(text)}`),
+  uploadChunk: (streamId, blob) => {
+    const formData = new FormData();
+    formData.append('chunk', blob);
+    return api.post(`/live/${streamId}/upload-chunk`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    });
+  }
+};
+
+// ---- Wallet ----
+export const walletAPI = {
+  getBalance: () => api.get('/wallet'),
+  getTransactions: (page = 1) => api.get(`/wallet/transactions?page=${page}`),
+  initiateTopup: (amountEur) => api.post(`/wallet/topup/initiate?amount_eur=${amountEur}`),
+  withdraw: (amount) => api.post(`/wallet/withdraw?amount=${amount}`),
+};
+
+// ---- Gifts ----
+export const giftsAPI = {
+  getAll: () => api.get('/gifts'),
+  send: (recipientId, giftId, streamId = null) => {
+    const url = streamId 
+      ? `/gifts/send?recipient_id=${recipientId}&gift_id=${giftId}&stream_id=${streamId}`
+      : `/gifts/send?recipient_id=${recipientId}&gift_id=${giftId}`;
+    return api.post(url);
+  },
+  seedGifts: () => api.post('/gifts/seed'),
+};
+
+
 export default api;

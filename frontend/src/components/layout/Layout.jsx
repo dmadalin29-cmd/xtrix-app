@@ -4,12 +4,13 @@ import { motion } from 'framer-motion';
 import {
   Home, Compass, Users, Radio, User, Search, Upload, Bell,
   MessageCircle, Settings, LogOut, BadgeCheck, Plus,
-  ChevronDown, ChevronUp, Sparkles, BarChart3, Moon, Sun
+  ChevronDown, ChevronUp, Sparkles, BarChart3, Moon, Sun, Wallet, Coins
 } from 'lucide-react';
 import { formatNumber } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
-import { discoverAPI, notificationsAPI } from '../../services/api';
+import { discoverAPI, notificationsAPI, walletAPI } from '../../services/api';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
+import WalletModal from '../WalletModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -163,15 +164,21 @@ const Header = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState([]);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [showWalletModal, setShowWalletModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       notificationsAPI.getAll().then(res => setNotifications(res.data || [])).catch(() => {});
+      walletAPI.getBalance().then(res => setWalletBalance(res.data?.balance || 0)).catch(() => {});
     }
   }, [isAuthenticated]);
 
   return (
     <header className="fixed top-0 left-[280px] right-0 h-16 z-50 flex items-center justify-between px-6" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(30px)' }}>
+      {/* Wallet Modal */}
+      {showWalletModal && <WalletModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} user={user} />}
+      
       {/* Search */}
       <div className="flex-1 max-w-[460px]">
         <motion.div
@@ -207,6 +214,26 @@ const Header = () => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
+        {isAuthenticated && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate('/live/studio')}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
+                  style={{ background: 'linear-gradient(135deg, #ff0050, #ff3366)' }}
+                >
+                  <Radio className="w-4 h-4" />
+                  Go LIVE
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent><p>Pornește un live stream</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+        
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -226,6 +253,23 @@ const Header = () => {
 
         {isAuthenticated ? (
           <>
+            {/* Wallet Balance */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div 
+                    onClick={() => setShowWalletModal(true)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/[0.05] transition-colors" 
+                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                  >
+                    <Coins className="w-4 h-4 text-[#FFD700]" />
+                    <span className="text-sm font-semibold text-white">{walletBalance}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent><p>Wallet balance</p></TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             {/* Notifications */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

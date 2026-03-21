@@ -438,27 +438,26 @@ frontend:
 
 metadata:
   created_by: "main_agent"
-  version: "1.0"
-  test_sequence: 5
+  version: "2.0"
+  test_sequence: 6
   run_ui: true
 
 test_plan:
   current_focus:
-    - "Fix ReactPlayer autoplay error causing webpack overlay"
-    - "Upload Page - complete testing after overlay fix"
-    - "Feed Interactions - complete testing after overlay fix"
-    - "Logout - complete testing after overlay fix"
-  stuck_tasks:
-    - "Upload Page"
-    - "Feed Interactions (Like/Comment/Bookmark)"
-    - "Logout"
+    - "Live - Start Stream (HLS)"
+    - "Live - Upload Chunks & HLS Processing"
+    - "Live - Chat"
+    - "Go Live Studio - Full flow (camera, broadcast, end)"
+    - "Live Page - HLS Player & Gift Panel"
+    - "Wallet - Get Balance"
+    - "Wallet - Top-up initiation (Viva pending)"
+    - "Wallet - Withdraw"
+    - "Gifts - Send Gift with 70/30 split"
+    - "Wallet Modal - All tabs"
+  stuck_tasks: []
   test_all: false
-  test_priority: "stuck_first"
-  completed_new_tests:
-    - "Messages - Conversations"
-    - "Messages - Send/Receive"
-    - "Users - Avatar Upload"
-    - "Users - Profile Update"
+  test_priority: "high_first"
+  completed_new_tests: []
 
 agent_communication:
     - agent: "main"
@@ -469,3 +468,226 @@ agent_communication:
     - message: "⚠️ CRITICAL FRONTEND ISSUE FOUND: ReactPlayer autoplay error is causing webpack-dev-server error overlay to block all interactions. Error: 'The play() request was interrupted because the media was removed from the document.' This iframe overlay intercepts pointer events, preventing clicks on Upload button, Comment button, Logout dropdown, and other UI elements. Root cause: ReactPlayer in FeedPage.jsx is trying to autoplay YouTube videos before they're fully mounted/loaded. SUCCESSFUL TESTS: Homepage load (✅), Auth modal (✅), User registration (✅), Discover page (✅), Profile page (✅), Like button (✅ partial). BLOCKED TESTS: Upload page navigation, Feed comment interactions, Logout. RECOMMENDATION: Fix ReactPlayer autoplay issue by either: 1) Disabling autoplay on mount, 2) Adding proper error handling to prevent overlay, 3) Ensuring video elements are fully loaded before play() is called, or 4) Disabling webpack error overlay in development."
     - agent: "testing"
     - message: "✅ MESSAGES & AVATAR TESTING COMPLETE: All new messaging and avatar upload endpoints tested successfully. Test flow executed: 1) Created 2 fresh users (msg_user_a, msg_user_b), 2) Created conversation between users, 3) Sent messages bidirectionally, 4) Retrieved messages with proper chronological order, 5) Verified conversation lists with unread counts, 6) Uploaded avatar image successfully, 7) Updated user profile (displayName, bio). All endpoints working correctly with proper authentication, data persistence, file upload handling, and response formats. Messages system fully functional with notifications."
+
+
+
+  - task: "Go Live Studio - Camera Access"
+    implemented: true
+    working: "NA"
+    file: "src/pages/GoLiveStudio.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Go Live Studio page with camera access via getUserMedia(). User can start/stop camera, toggle mic, set stream title and category. VISUAL TEST: Page loads correctly with all controls visible."
+
+  - task: "Go Live Studio - Start Broadcast"
+    implemented: true
+    working: "NA"
+    file: "src/pages/GoLiveStudio.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Start broadcast button calls POST /api/live/start and begins MediaRecorder to send chunks to backend every 2 seconds."
+
+  - task: "Live Page - HLS Player"
+    implemented: true
+    working: "NA"
+    file: "src/pages/LivePage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Live page upgraded to consume real HLS streams using hls.js. Shows active streams from GET /api/live/active. StreamViewer modal with HLS video player."
+
+  - task: "Live Page - Gift Panel"
+    implemented: true
+    working: "NA"
+    file: "src/pages/LivePage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Gift panel in stream viewer with 20 gifts displayed. User can click to send gift to creator. Shows wallet balance and gift costs."
+
+  - task: "Wallet Modal - Display & Top-up"
+    implemented: true
+    working: "NA"
+    file: "src/components/WalletModal.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Wallet modal accessible by clicking wallet balance in header. Shows balance, total earned/spent. Top-up tab allows initiating payment (Viva Payments integration pending). VISUAL TEST: Modal displays correctly with 100 coins balance."
+
+  - task: "Wallet Modal - Withdraw & History"
+    implemented: true
+    working: "NA"
+    file: "src/components/WalletModal.jsx"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Withdraw tab for creators to cash out coins. History tab shows transaction list. Both tabs functional but need testing."
+
+
+  - task: "Live - Start Stream"
+    implemented: true
+    working: "NA"
+    file: "routes/live.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "POST /api/live/start - Create live stream session with HLS support. Returns stream ID and HLS URL."
+
+  - task: "Live - End Stream"
+    implemented: true
+
+    - agent: "main"
+    - message: "🚀 NEW FEATURES IMPLEMENTED (FAZA 1 & 2): 1) Go Live feature complete - Backend: HLS streaming with FFmpeg, live.py routes (start, end, upload-chunk, serve m3u8/ts, chat). Frontend: GoLiveStudio.jsx for broadcasters (camera access via getUserMedia, MediaRecorder chunks upload every 2s). LivePage.jsx upgraded with HLS player (hls.js) for viewers, gift panel integration. 2) Wallet system - Backend: wallet.py with balance, transactions, topup initiate, withdraw. Users get 100 coins bonus at registration. Frontend: Wallet balance in header, WalletModal with 3 tabs (Top-up, Withdraw, History). 3) Gift system - Backend: gifts.py with 20 gifts seeded (1-15000 coins), send gift with 70/30 revenue split. Frontend: Gift panel in live viewer. Economic model: Purchase rate 0.013 EUR/coin (+30% markup), Withdrawal rate 0.01 EUR/coin (base). QUICK TESTS PASSED: Wallet API (✅ 100 coins), Gifts API (✅ 20 gifts), Login (✅). VISUAL TESTS PASSED: Go Live Studio UI (✅), Wallet Modal (✅), Live Page (✅). NEEDS COMPREHENSIVE TESTING: Full live broadcast flow, gift sending, wallet transactions, HLS streaming. PENDING: Viva Payments integration (user will provide credentials later). Test files to create: /app/backend/tests/test_live.py, /app/backend/tests/test_wallet.py, /app/backend/tests/test_gifts.py"
+
+    working: "NA"
+    file: "routes/live.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "POST /api/live/{stream_id}/end - End live stream, calculate duration and stats."
+
+  - task: "Live - Upload Chunks (HLS)"
+    implemented: true
+    working: "NA"
+    file: "routes/live.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "POST /api/live/{stream_id}/upload-chunk - Receive video chunks from broadcaster and process with FFmpeg to HLS format (.m3u8 + .ts segments)."
+
+  - task: "Live - HLS Playlist & Segments"
+    implemented: true
+    working: "NA"
+    file: "routes/live.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "GET /api/live/{stream_id}/stream.m3u8 - Serve HLS playlist. GET /api/live/{stream_id}/{segment}.ts - Serve HLS segments."
+
+  - task: "Live - Chat"
+    implemented: true
+    working: "NA"
+    file: "routes/live.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "GET/POST /api/live/{stream_id}/chat - Live chat messages during streams."
+
+  - task: "Wallet - Get Balance"
+    implemented: true
+    working: true
+    file: "routes/wallet.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "GET /api/wallet - Get user wallet balance, totalEarned, totalSpent, conversion rates. TESTED with curl: user has 100 coins initial bonus."
+
+  - task: "Wallet - Transactions"
+    implemented: true
+    working: "NA"
+    file: "routes/wallet.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "GET /api/wallet/transactions - Get transaction history with pagination."
+
+  - task: "Wallet - Top-up (Viva Payments)"
+    implemented: true
+    working: "NA"
+    file: "routes/wallet.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "POST /api/wallet/topup/initiate - Initiate wallet top-up. Viva Payments integration PENDING (user will provide credentials later). Conversion: 1 coin = 0.013 EUR (30% markup)."
+
+  - task: "Wallet - Withdraw"
+    implemented: true
+    working: "NA"
+    file: "routes/wallet.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "POST /api/wallet/withdraw - Withdraw coins to EUR. Conversion: 1 coin = 0.01 EUR (base rate for creators)."
+
+  - task: "Gifts - Get All"
+    implemented: true
+    working: true
+    file: "routes/gifts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "GET /api/gifts - Get all 20 gifts. TESTED with curl: 20 gifts returned (1-15000 coins range)."
+
+  - task: "Gifts - Send Gift"
+    implemented: true
+    working: "NA"
+    file: "routes/gifts.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "POST /api/gifts/send - Send gift to creator. Implements 70/30 revenue split (70% to creator, 30% to platform). Creates transactions and notifications."
+
+  - task: "Gifts - Seed"
+    implemented: true
+    working: true
+    file: "routes/gifts.py"
+    stuck_count: 0
+    priority: "low"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "POST /api/gifts/seed - Seed 20 gifts. TESTED with curl: Successfully seeded 20 gifts with emoji icons and costs from 1 to 15000 coins."

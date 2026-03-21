@@ -1,21 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Radio, Users, Eye, Heart, MessageCircle, Search, BadgeCheck } from 'lucide-react';
-import { users as mockUsers, formatNumber } from '../data/mockData';
+import { Radio, Users, Eye, Heart, MessageCircle, X, Send, Gift, BadgeCheck } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { liveAPI, giftsAPI } from '../services/api';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
-
-// Mock live streams (placeholder)
-const mockStreams = [
-  { id: 'live_1', user: mockUsers[0], title: 'Dance practice LIVE!', viewers: 12400, thumbnail: 'https://images.unsplash.com/photo-1547153760-18fc86324498?w=400&h=300&fit=crop' },
-  { id: 'live_2', user: mockUsers[6], title: 'Comedy night - send requests!', viewers: 8900, thumbnail: 'https://images.unsplash.com/photo-1586105449897-20b5efeb3233?w=400&h=300&fit=crop' },
-  { id: 'live_3', user: mockUsers[7], title: 'Acoustic session', viewers: 5600, thumbnail: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=300&fit=crop' },
-  { id: 'live_4', user: mockUsers[1], title: 'Cooking Italian dinner', viewers: 3200, thumbnail: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=300&fit=crop' },
-  { id: 'live_5', user: mockUsers[4], title: 'Morning workout routine', viewers: 7800, thumbnail: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=300&fit=crop' },
-  { id: 'live_6', user: mockUsers[5], title: 'Digital art creation', viewers: 2100, thumbnail: 'https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=400&h=300&fit=crop' },
-];
+import Hls from 'hls.js';
 
 const LivePage = () => {
+  const { isAuthenticated, user } = useAuth();
+  const [streams, setStreams] = useState([]);
   const [selectedStream, setSelectedStream] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchActiveStreams();
+    // Refresh every 10 seconds
+    const interval = setInterval(fetchActiveStreams, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchActiveStreams = async () => {
+    try {
+      const res = await liveAPI.getActiveStreams();
+      setStreams(res.data || []);
+    } catch (err) {
+      console.error('Fetch streams error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
@@ -24,101 +37,399 @@ const LivePage = () => {
           <h1 className="text-3xl font-bold text-white">LIVE</h1>
           <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white" style={{ background: '#ff0050' }}>
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            {mockStreams.length} Live Now
+            {streams.length} Live Acum
           </span>
         </div>
-        <p className="text-sm text-white/40">Watch live streams from your favorite creators</p>
+        <p className="text-sm text-white/40">Urmărește live stream-uri de la creatorii tăi preferați</p>
       </motion.div>
 
       {/* Live Stream Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockStreams.map((stream, i) => (
-          <motion.div
-            key={stream.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-            whileHover={{ scale: 1.02, y: -4 }}
-            onClick={() => setSelectedStream(stream)}
-            className="group relative rounded-2xl overflow-hidden cursor-pointer"
-            style={{ border: '1px solid rgba(255,255,255,0.06)' }}
-          >
-            <div className="aspect-video relative">
-              <img src={stream.thumbnail} alt="" className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-              
-              {/* LIVE badge */}
-              <div className="absolute top-3 left-3 flex items-center gap-2">
-                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-white" style={{ background: '#ff0050' }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
-                </span>
-                <span className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white/80" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)' }}>
-                  <Eye className="w-3 h-3" /> {formatNumber(stream.viewers)}
-                </span>
-              </div>
-
-              {/* User info */}
-              <div className="absolute bottom-3 left-3 right-3">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Avatar className="w-8 h-8 ring-2 ring-[#ff0050]">
-                    <AvatarImage src={stream.user.avatar} />
-                    <AvatarFallback>{stream.user.displayName[0]}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <div className="flex items-center gap-1">
-                      <span className="text-sm font-bold text-white">{stream.user.username}</span>
-                      {stream.user.verified && <BadgeCheck className="w-3.5 h-3.5 text-[#00f5d4]" />}
-                    </div>
-                  </div>
-                </div>
-                <p className="text-sm text-white/80 font-medium">{stream.title}</p>
-              </div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Stream Viewer Modal */}
-      <AnimatePresence>
-        {selectedStream && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center" onClick={() => setSelectedStream(null)}>
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} onClick={e => e.stopPropagation()} className="relative w-full max-w-3xl rounded-2xl overflow-hidden" style={{ background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}>
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="w-10 h-10 mx-auto rounded-xl animate-spin" style={{ background: 'linear-gradient(135deg, #ff0050, #ff3366)', WebkitMaskImage: 'conic-gradient(transparent 30%, black)' }} />
+        </div>
+      ) : streams.length === 0 ? (
+        <div className="text-center py-20">
+          <Radio className="w-16 h-16 text-white/10 mx-auto mb-4" />
+          <p className="text-white/40">Niciun stream live momentan</p>
+          <p className="text-xs text-white/20 mt-2">Fii primul care merge LIVE!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {streams.map((stream, i) => (
+            <motion.div
+              key={stream.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.08 }}
+              whileHover={{ scale: 1.02, y: -4 }}
+              onClick={() => setSelectedStream(stream)}
+              className="group relative rounded-2xl overflow-hidden cursor-pointer"
+              style={{ border: '1px solid rgba(255,255,255,0.06)' }}
+            >
               <div className="aspect-video relative bg-black">
-                <img src={selectedStream.thumbnail} alt="" className="w-full h-full object-cover opacity-60" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <Radio className="w-12 h-12 text-[#ff0050] mx-auto mb-3 animate-pulse" />
-                    <p className="text-lg font-bold text-white">Live Stream</p>
-                    <p className="text-sm text-white/40 mt-1">Stream playback coming soon</p>
-                  </div>
-                </div>
-                <div className="absolute top-4 left-4 flex items-center gap-2">
+                {/* Placeholder thumbnail */}
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-pink-900/30" />
+                
+                {/* LIVE badge */}
+                <div className="absolute top-3 left-3 flex items-center gap-2">
                   <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-white" style={{ background: '#ff0050' }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
                   </span>
-                  <span className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white/80" style={{ background: 'rgba(0,0,0,0.5)' }}>
-                    <Eye className="w-3 h-3" /> {formatNumber(selectedStream.viewers)}
+                  <span className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white/80" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)' }}>
+                    <Eye className="w-3 h-3" /> {stream.viewers}
                   </span>
                 </div>
-              </div>
-              <div className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10 ring-2 ring-[#ff0050]">
-                    <AvatarImage src={selectedStream.user.avatar} />
-                    <AvatarFallback>{selectedStream.user.displayName[0]}</AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <p className="text-sm font-bold text-white">{selectedStream.user.displayName}</p>
-                    <p className="text-xs text-white/40">{selectedStream.title}</p>
+
+                {/* User info */}
+                <div className="absolute bottom-3 left-3 right-3">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <Avatar className="w-8 h-8 ring-2 ring-[#ff0050]">
+                      <AvatarImage src={stream.user.avatar} />
+                      <AvatarFallback>{stream.user.displayName[0]}</AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-bold text-white">{stream.user.username}</span>
+                        {stream.user.verified && <BadgeCheck className="w-3.5 h-3.5 text-[#00f5d4]" />}
+                      </div>
+                    </div>
                   </div>
+                  <p className="text-sm text-white/80 font-medium">{stream.title}</p>
                 </div>
-                <motion.button whileHover={{ scale: 1.05 }} className="px-5 py-2 rounded-full text-sm font-bold text-white" style={{ background: '#ff0050' }}>Follow</motion.button>
               </div>
             </motion.div>
-          </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* Stream Viewer Modal */}
+      {selectedStream && <StreamViewer stream={selectedStream} onClose={() => setSelectedStream(null)} />}
+    </div>
+  );
+};
+
+// Stream Viewer Component with HLS Player
+const StreamViewer = ({ stream, onClose }) => {
+  const { isAuthenticated, user, requireAuth } = useAuth();
+  const videoRef = useRef(null);
+  const hlsRef = useRef(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [showGifts, setShowGifts] = useState(false);
+  const [gifts, setGifts] = useState([]);
+  const [currentViewers, setCurrentViewers] = useState(stream.viewers);
+
+  useEffect(() => {
+    // Join stream
+    liveAPI.joinStream(stream.id).catch(console.error);
+
+    // Load HLS stream
+    if (Hls.isSupported() && videoRef.current) {
+      const hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+      });
+      hlsRef.current = hls;
+      
+      const streamUrl = `${process.env.REACT_APP_BACKEND_URL}/api/live/${stream.id}/stream.m3u8`;
+      hls.loadSource(streamUrl);
+      hls.attachMedia(videoRef.current);
+      
+      hls.on(Hls.Events.ERROR, (event, data) => {
+        console.error('HLS Error:', data);
+      });
+    } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
+      // Native HLS support (Safari)
+      videoRef.current.src = `${process.env.REACT_APP_BACKEND_URL}/api/live/${stream.id}/stream.m3u8`;
+    }
+
+    // Fetch gifts
+    giftsAPI.getAll().then(res => setGifts(res.data || [])).catch(console.error);
+
+    // Poll chat
+    const chatInterval = setInterval(async () => {
+      try {
+        const res = await liveAPI.getChat(stream.id);
+        setChatMessages(res.data || []);
+      } catch (err) {
+        console.error('Chat poll error:', err);
+      }
+    }, 3000);
+
+    return () => {
+      // Leave stream
+      liveAPI.leaveStream(stream.id).catch(console.error);
+      
+      // Cleanup HLS
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+      }
+      
+      clearInterval(chatInterval);
+    };
+  }, [stream.id]);
+
+  const sendMessage = async () => {
+    if (!chatInput.trim()) return;
+    requireAuth(async () => {
+      try {
+        await liveAPI.sendChat(stream.id, chatInput);
+        setChatInput('');
+      } catch (err) {
+        console.error('Send chat error:', err);
+      }
+    });
+  };
+
+  const sendGift = async (gift) => {
+    requireAuth(async () => {
+      try {
+        await giftsAPI.send(stream.user.id, gift._id, stream.id);
+        setShowGifts(false);
+        // Show animation (todo)
+      } catch (err) {
+        alert(err.response?.data?.detail || 'Eroare la trimiterea cadoului');
+      }
+    });
+  };
+
+  const formatNumber = (num) => {
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+    return num.toString();
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+      
+      <motion.div
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={e => e.stopPropagation()}
+        className="relative w-full h-full max-w-7xl flex gap-4 p-6"
+      >
+        {/* Video Player */}
+        <div className="flex-1 flex flex-col">
+          <div className="relative flex-1 rounded-2xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            <video ref={videoRef} autoPlay playsInline controls className="w-full h-full object-contain" />
+            
+            {/* Live Badge */}
+            <div className="absolute top-4 left-4 flex items-center gap-2">
+              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-white" style={{ background: '#ff0050' }}>
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
+              </span>
+              <span className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white/80" style={{ background: 'rgba(0,0,0,0.7)' }}>
+                <Eye className="w-3 h-3" /> {currentViewers}
+              </span>
+            </div>
+
+            {/* Close Button */}
+            <button onClick={onClose} className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+              <X className="w-5 h-5 text-white" />
+            </button>
+          </div>
+
+          {/* Stream Info */}
+          <div className="mt-4 p-4 rounded-2xl flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="flex items-center gap-3">
+              <Avatar className="w-12 h-12 ring-2 ring-[#ff0050]">
+                <AvatarImage src={stream.user.avatar} />
+                <AvatarFallback>{stream.user.displayName[0]}</AvatarFallback>
+              </Avatar>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-bold text-white">{stream.user.displayName}</p>
+                  {stream.user.verified && <BadgeCheck className="w-4 h-4 text-[#00f5d4]" />}
+                </div>
+                <p className="text-xs text-white/40">{stream.title}</p>
+              </div>
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="px-5 py-2 rounded-full text-sm font-bold text-white"
+              style={{ background: '#ff0050' }}
+            >
+              Follow
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Right Sidebar - Chat & Gifts */}
+        <div className="w-[380px] flex flex-col rounded-2xl overflow-hidden" style={{ background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          {/* Tabs */}
+          <div className="flex border-b border-white/[0.06]">
+            <button
+              onClick={() => setShowGifts(false)}
+              className={`flex-1 py-3 text-sm font-semibold transition-colors ${!showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
+            >
+              <MessageCircle className="w-4 h-4 inline mr-2" />
+              Chat
+            </button>
+            <button
+              onClick={() => setShowGifts(true)}
+              className={`flex-1 py-3 text-sm font-semibold transition-colors ${showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
+            >
+              <Gift className="w-4 h-4 inline mr-2" />
+              Cadouri
+            </button>
+          </div>
+
+          {!showGifts ? (
+            <LiveChat streamId={stream.id} />
+          ) : (
+            <GiftPanel gifts={gifts} onSend={sendGift} />
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+};
+
+// Live Chat Component
+const LiveChat = ({ streamId }) => {
+  const { isAuthenticated, requireAuth } = useAuth();
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState('');
+  const chatEndRef = useRef(null);
+
+  useEffect(() => {
+    const pollChat = setInterval(async () => {
+      try {
+        const res = await liveAPI.getChat(streamId);
+        setMessages(res.data || []);
+      } catch (err) {
+        console.error('Chat error:', err);
+      }
+    }, 2000);
+
+    return () => clearInterval(pollChat);
+  }, [streamId]);
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const send = () => {
+    if (!input.trim()) return;
+    requireAuth(async () => {
+      try {
+        await liveAPI.sendChat(streamId, input);
+        setInput('');
+      } catch (err) {
+        console.error('Send error:', err);
+      }
+    });
+  };
+
+  return (
+    <>
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {messages.length === 0 ? (
+          <p className="text-xs text-white/30 text-center py-8">Fii primul care trimite un mesaj!</p>
+        ) : (
+          messages.map((msg) => (
+            <div key={msg.id} className="flex items-start gap-2">
+              <Avatar className="w-6 h-6 flex-shrink-0">
+                <AvatarImage src={msg.user.avatar} />
+                <AvatarFallback>{msg.user.username[0]}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs leading-relaxed">
+                  <span className="font-semibold text-[#00f5d4]">{msg.user.username}</span>
+                  <span className="text-white/60 ml-2">{msg.text}</span>
+                </p>
+              </div>
+            </div>
+          ))
         )}
-      </AnimatePresence>
+        <div ref={chatEndRef} />
+      </div>
+
+      <div className="p-4 border-t border-white/[0.06]">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && send()}
+            placeholder={isAuthenticated ? "Scrie un mesaj..." : "Autentifică-te pentru a chata"}
+            disabled={!isAuthenticated}
+            className="flex-1 px-3 py-2 rounded-xl text-xs text-white placeholder-white/30 outline-none disabled:opacity-40"
+            style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+          />
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={send}
+            disabled={!isAuthenticated}
+            className="w-9 h-9 rounded-xl flex items-center justify-center disabled:opacity-40"
+            style={{ background: 'linear-gradient(135deg, #ff0050, #ff3366)' }}
+          >
+            <Send className="w-4 h-4 text-white" />
+          </motion.button>
+        </div>
+      </div>
+    </>
+  );
+};
+
+// Gift Panel Component
+const GiftPanel = ({ gifts, onSend }) => {
+  const { isAuthenticated, user } = useAuth();
+  const [selectedGift, setSelectedGift] = useState(null);
+
+  const handleSend = (gift) => {
+    if (!isAuthenticated) {
+      alert('Autentifică-te pentru a trimite cadouri!');
+      return;
+    }
+    if (user.walletBalance < gift.cost) {
+      alert(`Insufficient balance! Ai nevoie de ${gift.cost} coins.`);
+      return;
+    }
+    onSend(gift);
+  };
+
+  return (
+    <div className="flex-1 overflow-y-auto p-4">
+      <div className="mb-4 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-xs text-white/50 mb-1">Soldul tău:</p>
+        <p className="text-lg font-bold text-white">{user?.walletBalance || 0} <span className="text-sm text-white/40">coins</span></p>
+      </div>
+
+      <div className="grid grid-cols-3 gap-3">
+        {gifts.map((gift) => (
+          <motion.button
+            key={gift._id}
+            whileHover={{ scale: 1.05, y: -2 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => handleSend(gift)}
+            className="p-3 rounded-xl text-center transition-colors"
+            style={{
+              background: 'rgba(255,255,255,0.03)',
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <div className="text-2xl mb-1">{gift.icon}</div>
+            <p className="text-[10px] text-white/80 font-medium truncate">{gift.name}</p>
+            <p className="text-xs font-bold text-[#00f5d4] mt-1">{gift.cost}</p>
+          </motion.button>
+        ))}
+      </div>
+
+      <div className="mt-4 p-3 rounded-xl" style={{ background: 'rgba(255,0,80,0.05)', border: '1px solid rgba(255,0,80,0.2)' }}>
+        <p className="text-xs text-white/50">💡 Cadourile trimise susțin creatorii! Creatorii primesc 70% din valoare.</p>
+      </div>
     </div>
   );
 };

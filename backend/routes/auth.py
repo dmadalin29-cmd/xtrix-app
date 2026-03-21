@@ -30,6 +30,9 @@ def user_doc_to_response(doc: dict) -> UserResponse:
         following=doc.get("following", 0),
         likes=doc.get("likes", 0),
         verified=doc.get("verified", False),
+        walletBalance=doc.get("walletBalance", 0),
+        totalEarned=doc.get("totalEarned", 0),
+        totalSpent=doc.get("totalSpent", 0),
         createdAt=doc.get("createdAt", ""),
     )
 
@@ -56,6 +59,10 @@ async def register(data: UserCreate):
         "following": 0,
         "likes": 0,
         "verified": False,
+        "walletBalance": 100,  # Initial bonus: 100 coins
+        "totalEarned": 0,
+        "totalSpent": 0,
+        "totalGiftsReceived": 0,
         "createdAt": datetime.utcnow().isoformat(),
     }
     await db.users.insert_one(user_doc)
