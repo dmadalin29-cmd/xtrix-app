@@ -1,8 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, BackgroundTasks
 from middleware.auth import get_current_user
 from datetime import datetime, timezone
 import uuid
 import logging
+import os
+import base64
+import httpx
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/wallet", tags=["wallet"])
@@ -20,6 +23,13 @@ PURCHASE_RATE = 0.013   # 1 coin = 0.013 EUR (30% markup for buyers)
 # Platform revenue split
 CREATOR_SHARE = 0.70  # 70% to creator
 PLATFORM_SHARE = 0.30  # 30% to platform
+
+# Viva Payments Config (will be loaded from env when credentials provided)
+VIVA_API_URL = os.getenv("VIVA_API_URL", "https://demo-api.vivapayments.com")
+VIVA_MERCHANT_ID = os.getenv("VIVA_MERCHANT_ID", "")
+VIVA_API_KEY = os.getenv("VIVA_API_KEY", "")
+VIVA_SOURCE_CODE = os.getenv("VIVA_SOURCE_CODE", "")
+VIVA_WEBHOOK_SECRET = os.getenv("VIVA_WEBHOOK_SECRET", "")
 
 
 @router.get("")
@@ -84,44 +94,168 @@ async def initiate_topup(
     user_id: str = Depends(get_current_user)
 ):
     """Initiate wallet top-up via Viva Payments"""
+    if amount_eur > 50000:
+        raise HTTPException(status_code=400, detail="Amount exceeds maximum limit (50000 EUR)")
+    
     # Calculate coins user will receive (amount / PURCHASE_RATE)
     coins = int(amount_eur / PURCHASE_RATE)
     
+    # Get user details
+    user = await db.users.find_one({"_id": user_id})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
     # Create pending transaction
     tx_id = str(uuid.uuid4())
+    order_code = str(uuid.uuid4())[:16]  # Short order code
+    
     tx_doc = {
         "_id": tx_id,
         "userId": user_id,
+        "orderCode": order_code,
         "type": "topup_pending",
         "amount": coins,
         "amountEur": amount_eur,
         "status": "pending",
         "description": f"Wallet top-up: {coins} coins",
         "createdAt": datetime.now(timezone.utc).isoformat(),
+        "webhookReceived": False,
     }
     await db.transactions.insert_one(tx_doc)
     
-    # TODO: Integrate Viva Payments API here
-    # Return payment URL/redirect
+    # Check if Viva credentials are configured
+    if not VIVA_MERCHANT_ID or not VIVA_API_KEY or not VIVA_SOURCE_CODE:
+        return {
+            "transactionId": tx_id,
+            "orderCode": order_code,
+            "coins": coins,
+            "amountEur": amount_eur,
+            "status": "pending",
+            "message": "⚠️ Viva Payments credentials not configured. Integration pending.",
+            "checkoutUrl": None
+        }
     
-    return {
-        "transactionId": tx_id,
-        "coins": coins,
-        "amountEur": amount_eur,
-        "status": "pending",
-        "message": "Viva Payments integration pending - will redirect to payment page"
-    }
+    try:
+        # Create Viva payment order
+        auth_header = base64.b64encode(f"{VIVA_MERCHANT_ID}:{VIVA_API_KEY}".encode()).decode()
+        
+        async with httpx.AsyncClient() as client:
+            response = await client.post(
+                f"{VIVA_API_URL}/checkout/v2/orders",
+                json={
+                    "amount": int(amount_eur * 100),  # Convert to cents
+                    "sourceCode": VIVA_SOURCE_CODE,
+                    "customerTrns": f"KdM Wallet Top-up: {coins} coins",
+                    "customer": {
+                        "email": user.get("email", ""),
+                        "fullName": user.get("displayName", ""),
+                        "requestLang": "ro-RO"
+                    }
+                },
+                headers={
+                    "Authorization": f"Basic {auth_header}",
+                    "Content-Type": "application/json"
+                },
+                timeout=30.0
+            )
+            response.raise_for_status()
+            viva_data = response.json()
+            
+            if not viva_data.get("Success"):
+                raise HTTPException(status_code=400, detail="Viva order creation failed")
+            
+            viva_order_code = viva_data.get("OrderCode")
+            
+            # Update transaction with Viva order code
+            await db.transactions.update_one(
+                {"_id": tx_id},
+                {"$set": {"vivaOrderCode": viva_order_code}}
+            )
+            
+            # Generate checkout URL
+            checkout_url = f"https://demo.vivapayments.com/web/checkout?ref={viva_order_code}"
+            
+            return {
+                "transactionId": tx_id,
+                "orderCode": order_code,
+                "vivaOrderCode": viva_order_code,
+                "coins": coins,
+                "amountEur": amount_eur,
+                "status": "pending",
+                "checkoutUrl": checkout_url,
+                "message": "Redirect user to checkout URL"
+            }
+    
+    except httpx.HTTPStatusError as e:
+        logger.error(f"Viva API error: {e.response.text}")
+        raise HTTPException(status_code=500, detail=f"Payment gateway error: {e.response.text}")
+    except Exception as e:
+        logger.error(f"Top-up initiation error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/topup/webhook")
-async def topup_webhook():
+async def topup_webhook(request: dict, background_tasks: BackgroundTasks):
     """Webhook endpoint for Viva Payments confirmation"""
-    # TODO: Verify webhook signature
-    # TODO: Parse Viva webhook payload
-    # TODO: Update transaction status
-    # TODO: Credit user wallet
+    try:
+        # Extract webhook data
+        event_type_id = request.get("EventTypeId")
+        event_data = request.get("EventData", {})
+        
+        # Transaction Payment Created (1796)
+        if event_type_id == 1796:
+            transaction_id = event_data.get("transactionId")
+            viva_order_code = str(event_data.get("orderCode"))
+            amount_cents = event_data.get("amount", 0)
+            status_id = event_data.get("statusId")
+            
+            # Only process if status is Finished (F)
+            if status_id == "F":
+                amount_eur = amount_cents / 100
+                coins = int(amount_eur / PURCHASE_RATE)
+                
+                # Find transaction
+                tx = await db.transactions.find_one({"vivaOrderCode": viva_order_code})
+                if tx:
+                    user_id = tx.get("userId")
+                    
+                    # Update wallet balance
+                    await db.users.update_one(
+                        {"_id": user_id},
+                        {"$inc": {"walletBalance": coins}}
+                    )
+                    
+                    # Update transaction status
+                    await db.transactions.update_one(
+                        {"_id": tx["_id"]},
+                        {
+                            "$set": {
+                                "status": "completed",
+                                "vivaTransactionId": transaction_id,
+                                "webhookReceived": True,
+                                "completedAt": datetime.now(timezone.utc).isoformat()
+                            }
+                        }
+                    )
+                    
+                    logger.info(f"✅ Top-up completed: {coins} coins added to user {user_id}")
+        
+        # Transaction Failed (1798)
+        elif event_type_id == 1798:
+            viva_order_code = str(event_data.get("orderCode"))
+            tx = await db.transactions.find_one({"vivaOrderCode": viva_order_code})
+            if tx:
+                await db.transactions.update_one(
+                    {"_id": tx["_id"]},
+                    {"$set": {"status": "failed", "webhookReceived": True}}
+                )
+                logger.info(f"❌ Top-up failed for order {viva_order_code}")
+        
+        return {"received": True}
     
-    return {"received": True}
+    except Exception as e:
+        logger.error(f"Webhook processing error: {e}")
+        return {"received": True}  # Always return 200 to Viva
 
 
 @router.post("/withdraw")

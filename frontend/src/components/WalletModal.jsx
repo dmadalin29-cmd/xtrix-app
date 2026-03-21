@@ -43,8 +43,18 @@ const WalletModal = ({ isOpen, onClose, user }) => {
     try {
       setLoading(true);
       const res = await walletAPI.initiateTopup(amount);
-      alert(`Redirecționare către Viva Payments...\nVei primi ${res.data.coins} coins pentru ${amount} EUR`);
-      // TODO: Redirect to Viva payment page
+      
+      const coins = res.data.coins;
+      const checkoutUrl = res.data.checkoutUrl;
+      
+      if (checkoutUrl) {
+        // Redirect to Viva payment page
+        window.location.href = checkoutUrl;
+      } else {
+        // Viva not configured yet
+        alert(`⚠️ Viva Payments nu este încă configurat.\n\nCând va fi activat, vei primi ${coins} coins pentru ${amount} EUR.`);
+      }
+      
       setTopupAmount('');
       fetchWalletData();
     } catch (err) {
