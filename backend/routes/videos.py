@@ -339,3 +339,71 @@ async def create_comment(video_id: str, data: CommentCreate, user_id: str = Depe
         "time": "now",
         "replies": 0,
     }
+
+
+# ---- Comment Replies ----
+@router.get("/comments/{comment_id}/replies")
+async def get_replies(comment_id: str, page: int = Query(1, ge=1), limit: int = Query(20, le=50)):
+    skip = (page - 1) * limit
+    total = await db.comment_replies.count_documents({"parentId": comment_id})
+    docs = await db.comment_replies.find({"parentId": comment_id}).sort("createdAt", 1).skip(skip).limit(limit).to_list(limit)
+    replies = []
+    for doc in docs:
+        user = await db.users.find_one({"_id": doc["userId"]})
+        replies.append({
+            "id": doc["_id"],
+            "user": user_doc_to_response(user).dict() if user else {},
+            "text": doc.get("text", ""),
+            "likes": doc.get("likes", 0),
+            "time": time_ago(doc.get("createdAt", "")),
+        })
+    return {"replies": replies, "total": total}
+
+
+@router.post("/comments/{comment_id}/replies")
+async def create_reply(comment_id: str, data: CommentCreate, user_id: str = Depends(get_current_user)):
+    parent = await db.comments.find_one({"_id": comment_id})
+    if not parent:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    reply_id = str(uuid.uuid4())
+    reply_doc = {
+        "_id": reply_id,
+        "parentId": comment_id,
+        "videoId": parent.get("videoId", ""),
+        "userId": user_id,
+        "text": data.text,
+        "likes": 0,
+        "createdAt": datetime.utcnow().isoformat(),
+    }
+    await db.comment_replies.insert_one(reply_doc)
+    await db.comments.update_one({"_id": comment_id}, {"$inc": {"replies": 1}})
+
+    user = await db.users.find_one({"_id": user_id})
+    return {
+        "id": reply_id,
+        "user": user_doc_to_response(user).dict() if user else {},
+        "text": data.text,
+        "likes": 0,
+        "time": "now",
+    }
+
+
+@router.post("/comments/{comment_id}/like")
+async def like_comment(comment_id: str, user_id: str = Depends(get_current_user)):
+    existing = await db.comment_likes.find_one({"userId": user_id, "commentId": comment_id})
+    if existing:
+        await db.comment_likes.delete_one({"_id": existing["_id"]})
+        await db.comments.update_one({"_id": comment_id}, {"$inc": {"likes": -1}})
+        comment = await db.comments.find_one({"_id": comment_id})
+        return {"liked": False, "likeCount": max(0, comment.get("likes", 0)) if comment else 0}
+    else:
+        await db.comment_likes.insert_one({
+            "_id": str(uuid.uuid4()),
+            "userId": user_id,
+            "commentId": comment_id,
+            "createdAt": datetime.utcnow().isoformat()
+        })
+        await db.comments.update_one({"_id": comment_id}, {"$inc": {"likes": 1}})
+        comment = await db.comments.find_one({"_id": comment_id})
+        return {"liked": True, "likeCount": comment.get("likes", 0) if comment else 0}

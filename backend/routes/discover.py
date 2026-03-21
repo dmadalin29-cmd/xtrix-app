@@ -108,6 +108,88 @@ async def get_creators(limit: int = Query(10, le=30)):
     return [user_doc_to_response(c).dict() for c in creators]
 
 
+@router.get("/hashtag/{tag}")
+async def get_hashtag_videos(tag: str, page: int = Query(1, ge=1), limit: int = Query(20, le=50)):
+    """Get videos by hashtag"""
+    skip = (page - 1) * limit
+    total = await db.videos.count_documents({"hashtags": tag, "visibility": "public"})
+    docs = await db.videos.find({"hashtags": tag, "visibility": "public"}).sort("likes", -1).skip(skip).limit(limit).to_list(limit)
+    videos = []
+    for doc in docs:
+        user = await db.users.find_one({"_id": doc.get("userId", "")})
+        videos.append({
+            "id": doc["_id"],
+            "user": user_doc_to_response(user).dict() if user else {},
+            "description": doc.get("caption", ""),
+            "music": doc.get("music", "Original Sound"),
+            "likes": doc.get("likes", 0),
+            "comments": doc.get("commentCount", 0),
+            "shares": doc.get("shares", 0),
+            "bookmarks": doc.get("bookmarks", 0),
+            "views": doc.get("views", 0),
+            "videoUrl": doc.get("videoUrl", ""),
+            "thumbnail": doc.get("thumbnail", ""),
+            "hashtags": doc.get("hashtags", []),
+            "createdAt": time_ago(doc.get("createdAt", "")),
+        })
+    # Get hashtag info
+    hashtag_doc = await db.hashtags.find_one({"tag": tag})
+    count = hashtag_doc.get("count", 0) if hashtag_doc else total
+    return {"tag": tag, "postCount": count, "videos": videos, "total": total, "hasMore": total > skip + limit}
+
+
+@router.get("/analytics")
+async def get_analytics(user_id: str = Depends(get_current_user)):
+    """Get creator analytics dashboard data"""
+    user = await db.users.find_one({"_id": user_id})
+    if not user:
+        return {}
+
+    # Total videos
+    total_videos = await db.videos.count_documents({"userId": user_id})
+
+    # Total views across all videos
+    pipeline = [
+        {"$match": {"userId": user_id}},
+        {"$group": {"_id": None, "totalViews": {"$sum": "$views"}, "totalLikes": {"$sum": "$likes"}, "totalComments": {"$sum": "$commentCount"}, "totalShares": {"$sum": "$shares"}}}
+    ]
+    stats = await db.videos.aggregate(pipeline).to_list(1)
+    agg = stats[0] if stats else {"totalViews": 0, "totalLikes": 0, "totalComments": 0, "totalShares": 0}
+
+    # Top videos
+    top_videos = await db.videos.find({"userId": user_id}).sort("views", -1).limit(5).to_list(5)
+    top_list = []
+    for v in top_videos:
+        top_list.append({
+            "id": v["_id"],
+            "caption": v.get("caption", "")[:60],
+            "views": v.get("views", 0),
+            "likes": v.get("likes", 0),
+            "comments": v.get("commentCount", 0),
+            "thumbnail": v.get("thumbnail", ""),
+        })
+
+    # Recent followers
+    recent_follows = await db.follows.find({"followingId": user_id}).sort("createdAt", -1).limit(5).to_list(5)
+    recent_followers = []
+    for f in recent_follows:
+        fu = await db.users.find_one({"_id": f["followerId"]})
+        if fu:
+            recent_followers.append(user_doc_to_response(fu).dict())
+
+    return {
+        "totalVideos": total_videos,
+        "totalViews": agg.get("totalViews", 0),
+        "totalLikes": agg.get("totalLikes", 0),
+        "totalComments": agg.get("totalComments", 0),
+        "totalShares": agg.get("totalShares", 0),
+        "followers": user.get("followers", 0),
+        "following": user.get("following", 0),
+        "topVideos": top_list,
+        "recentFollowers": recent_followers,
+    }
+
+
 @router.get("/search")
 async def search(q: str = Query("", min_length=1), type: str = Query("all")):
     results = {"users": [], "videos": []}

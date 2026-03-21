@@ -87,6 +87,8 @@ async def startup():
     await db.conversations.create_index("participants")
     await db.conversations.create_index([("updatedAt", -1)])
     await db.messages.create_index([("conversationId", 1), ("createdAt", -1)])
+    await db.comment_replies.create_index("parentId")
+    await db.comment_likes.create_index([("userId", 1), ("commentId", 1)], unique=True)
     logger.info("KdM API started - indexes created")
 
 

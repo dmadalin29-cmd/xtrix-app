@@ -65,6 +65,9 @@ export const videosAPI = {
   recordView: (id) => api.post(`/videos/${id}/view`),
   getComments: (id, page = 1) => api.get(`/videos/${id}/comments?page=${page}`),
   createComment: (id, text) => api.post(`/videos/${id}/comments`, { text }),
+  getCommentReplies: (commentId, page = 1) => api.get(`/videos/comments/${commentId}/replies?page=${page}`),
+  createCommentReply: (commentId, text) => api.post(`/videos/comments/${commentId}/replies`, { text }),
+  likeComment: (commentId) => api.post(`/videos/comments/${commentId}/like`),
 };
 
 // ---- Discover ----
@@ -72,6 +75,8 @@ export const discoverAPI = {
   getTrending: () => api.get('/discover/trending'),
   getCreators: (limit = 10) => api.get(`/discover/creators?limit=${limit}`),
   search: (q, type = 'all') => api.get(`/search?q=${encodeURIComponent(q)}&type=${type}`),
+  getHashtagVideos: (tag, page = 1) => api.get(`/hashtag/${encodeURIComponent(tag)}?page=${page}`),
+  getAnalytics: () => api.get('/analytics'),
 };
 
 // ---- Notifications ----

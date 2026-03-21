@@ -171,7 +171,7 @@ const DiscoverPage = ({ live }) => {
             {trendingHashtags.map((hashtag, i) => {
               const Icon = iconMap[hashtag.icon] || Hash;
               return (
-                <motion.div key={hashtag.tag} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} whileHover={{ y: -4, scale: 1.02 }} className="flex-shrink-0 p-4 rounded-2xl cursor-pointer min-w-[160px]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)' }}>
+                <motion.div key={hashtag.tag} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }} whileHover={{ y: -4, scale: 1.02 }} onClick={() => navigate(`/hashtag/${hashtag.tag}`)} className="flex-shrink-0 p-4 rounded-2xl cursor-pointer min-w-[160px]" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)' }}>
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: `rgba(255,0,80,${0.08 + i * 0.02})` }}>
                     <Icon className="w-5 h-5 text-[#ff0050]" />
                   </div>

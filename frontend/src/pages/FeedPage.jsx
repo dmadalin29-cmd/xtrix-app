@@ -11,6 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import ReactPlayer from 'react-player';
 import ShareModal from '../components/share/ShareModal';
+import StoriesBar from '../components/stories/StoriesBar';
 
 const VideoCard = ({ video, isActive }) => {
   const { requireAuth, isAuthenticated } = useAuth();
@@ -389,11 +390,22 @@ const FeedPage = ({ following: isFollowing }) => {
   }
 
   return (
-    <div className="h-full relative">
-      <div ref={scrollRef} onScroll={handleScroll} className="snap-scroll h-full">
+    <div className="h-full relative flex flex-col">
+      {/* Stories Bar */}
+      {!isFollowing && (
+        <div className="border-b border-white/[0.04] flex-shrink-0">
+          <StoriesBar />
+        </div>
+      )}
+      <div ref={scrollRef} onScroll={handleScroll} className="snap-scroll flex-1">
         {feedVideos.map((video, index) => (
           <VideoCard key={video.id} video={video} isActive={index === activeIndex} />
         ))}
+        {loadingMore && (
+          <div className="flex items-center justify-center py-4">
+            <div className="w-6 h-6 border-2 border-white/10 border-t-[#ff0050] rounded-full animate-spin" />
+          </div>
+        )}
       </div>
 
       {/* Navigation arrows */}

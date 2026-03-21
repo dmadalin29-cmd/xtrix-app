@@ -10,6 +10,9 @@ const DiscoverPage = lazy(() => import('./pages/DiscoverPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const UploadPage = lazy(() => import('./pages/UploadPage'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
+const HashtagPage = lazy(() => import('./pages/HashtagPage'));
+const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
+const LivePage = lazy(() => import('./pages/LivePage'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-full">
@@ -32,11 +35,13 @@ function App() {
                 <Route path="/" element={<FeedPage />} />
                 <Route path="/discover" element={<DiscoverPage />} />
                 <Route path="/following" element={<FeedPage following />} />
-                <Route path="/live" element={<DiscoverPage live />} />
+                <Route path="/live" element={<LivePage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/profile/:username" element={<ProfilePage />} />
                 <Route path="/upload" element={<UploadPage />} />
-              <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/messages" element={<MessagesPage />} />
+                <Route path="/hashtag/:tag" element={<HashtagPage />} />
+                <Route path="/analytics" element={<AnalyticsPage />} />
               </Routes>
             </Suspense>
           </Layout>

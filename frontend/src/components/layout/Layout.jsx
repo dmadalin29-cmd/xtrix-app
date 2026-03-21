@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Home, Compass, Users, Radio, User, Search, Upload, Bell,
   MessageCircle, Settings, LogOut, BadgeCheck, Plus,
-  ChevronDown, ChevronUp, Sparkles
+  ChevronDown, ChevronUp, Sparkles, BarChart3, Moon, Sun
 } from 'lucide-react';
 import { formatNumber } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -30,6 +30,7 @@ const navItems = [
   { path: '/following', label: 'Following', icon: Users },
   { path: '/messages', label: 'Messages', icon: MessageCircle },
   { path: '/live', label: 'LIVE', icon: Radio, badge: true },
+  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -55,7 +56,7 @@ const Sidebar = () => {
   const displayedAccounts = showAllSuggested ? suggestedAccounts : suggestedAccounts.slice(0, 3);
 
   const handleNavClick = (path) => {
-    if (path === '/following' || path === '/profile' || path === '/messages') {
+    if (path === '/following' || path === '/profile' || path === '/messages' || path === '/analytics') {
       requireAuth(() => navigate(path));
     } else {
       navigate(path);
