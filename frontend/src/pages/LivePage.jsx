@@ -295,15 +295,7 @@ const StreamViewer = ({ stream, onClose }) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[60] flex items-center justify-center p-6"
-      onClick={onClose}
-    >
-      <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
-      
+    <div className="fixed inset-0 z-[999] bg-black">
       {/* Flying Gifts Animations */}
       <AnimatePresence>
         {flyingGifts.map((gift) => (
@@ -314,37 +306,37 @@ const StreamViewer = ({ stream, onClose }) => {
           />
         ))}
       </AnimatePresence>
-      
-      <motion.div
-        initial={{ scale: 0.95, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.95, opacity: 0 }}
-        onClick={e => e.stopPropagation()}
-        className="relative w-full h-full max-w-[1600px] max-h-[90vh] flex gap-4"
+
+      {/* Close Button - Top Right Corner */}
+      <button 
+        onClick={onClose} 
+        className="absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors z-[1000]"
+        style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}
       >
-        {/* Video Player Container - Takes remaining space */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <div className="relative flex-1 rounded-2xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <X className="w-6 h-6 text-white" />
+      </button>
+      
+      {/* Main Content - Full Screen Split Layout */}
+      <div className="w-full h-full flex">
+        {/* Left: Video Player (70%) */}
+        <div className="w-[70%] flex flex-col p-8 pr-4">
+          {/* Video Container */}
+          <div className="flex-1 rounded-3xl overflow-hidden relative" style={{ background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.1)' }}>
             <video ref={videoRef} autoPlay playsInline controls className="w-full h-full object-contain" />
             
             {/* Live Badge */}
-            <div className="absolute top-4 left-4 flex items-center gap-2">
-              <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-bold text-white" style={{ background: '#ff0050' }}>
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> LIVE
+            <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
+              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white" style={{ background: '#ff0050' }}>
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> LIVE
               </span>
-              <span className="flex items-center gap-1 px-2 py-1 rounded-md text-xs text-white/80" style={{ background: 'rgba(0,0,0,0.7)' }}>
-                <Eye className="w-3 h-3" /> {currentViewers}
+              <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-white/80" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)' }}>
+                <Eye className="w-3.5 h-3.5" /> {currentViewers}
               </span>
             </div>
-
-            {/* Close Button */}
-            <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors z-30">
-              <X className="w-5 h-5 text-white" />
-            </button>
           </div>
 
-          {/* Stream Info */}
-          <div className="mt-4 p-4 rounded-2xl flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+          {/* Stream Info Bar */}
+          <div className="mt-4 p-4 rounded-xl flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
             <div className="flex items-center gap-3">
               <Avatar className="w-12 h-12 ring-2 ring-[#ff0050]">
                 <AvatarImage src={stream.user.avatar} />
@@ -406,10 +398,9 @@ const StreamViewer = ({ stream, onClose }) => {
             <GiftPanel gifts={gifts} onSend={sendGift} />
           )}
           </div>
-          </div>
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 };
 
