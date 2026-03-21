@@ -4,7 +4,7 @@ import { Video, VideoOff, Mic, MicOff, Radio, X, Users, Heart, Send, Settings, A
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { liveAPI } from '../services/api';
-import GlassDropdown from '../components/GlassDropdown';
+import GlassDropdown from '../components/GlassDropdown.jsx';
 
 const GoLiveStudio = () => {
   const navigate = useNavigate();

@@ -4,12 +4,13 @@ import { motion } from 'framer-motion';
 import {
   Home, Compass, Users, Radio, User, Search, Upload, Bell,
   MessageCircle, Settings, LogOut, BadgeCheck, Plus,
-  ChevronDown, ChevronUp, Sparkles
+  ChevronDown, ChevronUp, Sparkles, Coins
 } from 'lucide-react';
 import { formatNumber } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
 import { discoverAPI, notificationsAPI } from '../../services/api';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
+import WalletModal from '../WalletModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -155,7 +156,7 @@ const Sidebar = () => {
   );
 };
 
-const Header = () => {
+const Header = ({ showWalletModal, setShowWalletModal }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, setShowAuthModal, logout, requireAuth } = useAuth();
   const [searchFocused, setSearchFocused] = useState(false);
@@ -205,6 +206,26 @@ const Header = () => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
+        {isAuthenticated && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowWalletModal(true)}
+                  className="relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white border border-[#FFD700]/20 hover:border-[#FFD700]/40 transition-colors"
+                  style={{ background: 'rgba(255,215,0,0.06)' }}
+                >
+                  <Coins className="w-4 h-4 text-[#FFD700]" />
+                  <span className="text-[#FFD700]">{user?.walletBalance || 0}</span>
+                </motion.button>
+              </TooltipTrigger>
+              <TooltipContent><p>Portofel</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
+
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -313,6 +334,8 @@ const Header = () => {
 };
 
 const Layout = ({ children }) => {
+  const [showWalletModal, setShowWalletModal] = useState(false);
+
   return (
     <div className="h-screen overflow-hidden relative noise-overlay">
       {/* Ambient gradient orbs */}
@@ -320,10 +343,13 @@ const Layout = ({ children }) => {
       <div className="gradient-orb-2" />
 
       <Sidebar />
-      <Header />
+      <Header showWalletModal={showWalletModal} setShowWalletModal={setShowWalletModal} />
       <main className="ml-[280px] mt-16 h-[calc(100vh-64px)] overflow-y-auto relative z-10">
         {children}
       </main>
+
+      {/* Wallet Modal */}
+      <WalletModal open={showWalletModal} onClose={() => setShowWalletModal(false)} />
     </div>
   );
 };
