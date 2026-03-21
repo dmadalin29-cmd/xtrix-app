@@ -1,11 +1,16 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
 from models.schemas import UserResponse, UserUpdate, FollowResponse
 from middleware.auth import get_current_user, get_optional_user
 from datetime import datetime
 import logging
+import uuid
+import os
+import aiofiles
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/users", tags=["users"])
+
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
 
 db = None
 
@@ -72,6 +77,22 @@ async def update_profile(data: UserUpdate, user_id: str = Depends(get_current_us
     if not update_fields:
         raise HTTPException(status_code=400, detail="No fields to update")
     await db.users.update_one({"_id": user_id}, {"$set": update_fields})
+    user = await db.users.find_one({"_id": user_id})
+    return user_doc_to_response(user)
+
+
+@router.post("/me/avatar", response_model=UserResponse)
+async def upload_avatar(file: UploadFile = File(...), user_id: str = Depends(get_current_user)):
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="File must be an image")
+    ext = os.path.splitext(file.filename)[1] or ".jpg"
+    filename = f"avatar_{user_id}{ext}"
+    filepath = os.path.join(UPLOAD_DIR, filename)
+    async with aiofiles.open(filepath, 'wb') as f:
+        content = await file.read()
+        await f.write(content)
+    avatar_url = f"/api/uploads/{filename}"
+    await db.users.update_one({"_id": user_id}, {"$set": {"avatar": avatar_url}})
     user = await db.users.find_one({"_id": user_id})
     return user_doc_to_response(user)
 

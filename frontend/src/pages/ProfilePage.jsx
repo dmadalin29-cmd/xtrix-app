@@ -10,6 +10,7 @@ import { videos as mockVideos, formatNumber } from '../data/mockData';
 import { usersAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
+import EditProfileModal from '../components/profile/EditProfileModal';
 
 const ProfilePage = () => {
   const { username } = useParams();
@@ -20,6 +21,7 @@ const ProfilePage = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [activeTab, setActiveTab] = useState('videos');
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const isOwnProfile = !username || (currentUser && profileUser?.username === currentUser.username);
 
@@ -126,7 +128,7 @@ const ProfilePage = () => {
             </div>
             <div className="flex items-center gap-3 pb-2">
               {isOwnProfile ? (
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setShowEditModal(true)} className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-colors" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
                   <Edit3 className="w-4 h-4" /> Edit Profile
                 </motion.button>
               ) : (
@@ -222,6 +224,11 @@ const ProfilePage = () => {
           <p className="text-lg font-semibold text-white/40">This content is private</p>
           <p className="text-sm text-white/20 mt-1">Only the user can see saved videos</p>
         </div>
+      )}
+
+      {/* Edit Profile Modal */}
+      {isOwnProfile && (
+        <EditProfileModal open={showEditModal} onClose={() => setShowEditModal(false)} />
       )}
     </div>
   );

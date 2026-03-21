@@ -9,6 +9,7 @@ const FeedPage = lazy(() => import('./pages/FeedPage'));
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const UploadPage = lazy(() => import('./pages/UploadPage'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-full">
@@ -35,6 +36,7 @@ function App() {
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/profile/:username" element={<ProfilePage />} />
                 <Route path="/upload" element={<UploadPage />} />
+              <Route path="/messages" element={<MessagesPage />} />
               </Routes>
             </Suspense>
           </Layout>

@@ -39,18 +39,21 @@ from routes.auth import router as auth_router, set_db as auth_set_db
 from routes.users import router as users_router, set_db as users_set_db
 from routes.videos import router as videos_router, set_db as videos_set_db
 from routes.discover import router as discover_router, set_db as discover_set_db
+from routes.messages import router as messages_router, set_db as messages_set_db
 
 # Set DB references
 auth_set_db(db)
 users_set_db(db)
 videos_set_db(db)
 discover_set_db(db)
+messages_set_db(db)
 
 # Include routers
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(videos_router)
 app.include_router(discover_router)
+app.include_router(messages_router)
 
 # Serve uploaded files
 UPLOAD_DIR = os.path.join(ROOT_DIR, "uploads")
@@ -81,6 +84,9 @@ async def startup():
     await db.comments.create_index("videoId")
     await db.notifications.create_index([("userId", 1), ("createdAt", -1)])
     await db.hashtags.create_index("tag", unique=True)
+    await db.conversations.create_index("participants")
+    await db.conversations.create_index([("updatedAt", -1)])
+    await db.messages.create_index([("conversationId", 1), ("createdAt", -1)])
     logger.info("KdM API started - indexes created")
 
 

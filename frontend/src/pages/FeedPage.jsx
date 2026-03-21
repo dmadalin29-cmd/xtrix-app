@@ -10,6 +10,7 @@ import { videosAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import ReactPlayer from 'react-player';
+import ShareModal from '../components/share/ShareModal';
 
 const VideoCard = ({ video, isActive }) => {
   const { requireAuth, isAuthenticated } = useAuth();
@@ -22,6 +23,7 @@ const VideoCard = ({ video, isActive }) => {
   const [showHeart, setShowHeart] = useState(false);
   const [following, setFollowing] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const playTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -195,7 +197,7 @@ const VideoCard = ({ video, isActive }) => {
         </motion.div>
 
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <button className="w-12 h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors">
+          <button onClick={() => setShowShare(true)} className="w-12 h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors">
             <Share2 className="w-6 h-6 text-white" />
           </button>
           <span className="text-xs font-semibold text-white/60">{formatNumber(video.shares || 0)}</span>
@@ -212,6 +214,9 @@ const VideoCard = ({ video, isActive }) => {
           <CommentsPanel video={video} onClose={() => setShowComments(false)} />
         )}
       </AnimatePresence>
+
+      {/* Share Modal */}
+      <ShareModal open={showShare} onClose={() => setShowShare(false)} videoId={video.id} description={video.description} />
     </div>
   );
 };
@@ -310,35 +315,43 @@ const FeedPage = ({ following: isFollowing }) => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [feedVideos, setFeedVideos] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const scrollRef = useRef(null);
   const { isAuthenticated } = useAuth();
 
-  useEffect(() => {
-    const fetchFeed = async () => {
-      try {
-        let res;
-        if (isFollowing && isAuthenticated) {
-          res = await videosAPI.getFollowingFeed(1, 20);
-        } else {
-          res = await videosAPI.getFeed(1, 20);
-        }
-        const vids = res.data.videos || [];
-        // Filter to videos that have proper thumbnails or YouTube URLs
-        const goodVids = vids.filter(v => v.thumbnail || (v.videoUrl && v.videoUrl.includes('youtube')));
-        if (goodVids.length > 0) {
-          setFeedVideos(goodVids);
-        } else {
-          // Fallback to mock data if no proper videos exist yet
-          setFeedVideos(mockVideos);
-        }
-      } catch (err) {
-        setFeedVideos(mockVideos);
-      } finally {
-        setLoading(false);
+  const fetchFeed = useCallback(async (pageNum = 1, append = false) => {
+    if (pageNum > 1) setLoadingMore(true);
+    try {
+      let res;
+      if (isFollowing && isAuthenticated) {
+        res = await videosAPI.getFollowingFeed(pageNum, 10);
+      } else {
+        res = await videosAPI.getFeed(pageNum, 10);
       }
-    };
-    fetchFeed();
+      const vids = res.data.videos || [];
+      const goodVids = vids.filter(v => v.thumbnail || (v.videoUrl && v.videoUrl.includes('youtube')));
+      setHasMore(res.data.hasMore || false);
+
+      if (append) {
+        setFeedVideos(prev => [...prev, ...goodVids]);
+      } else if (goodVids.length > 0) {
+        setFeedVideos(goodVids);
+      } else {
+        setFeedVideos(mockVideos);
+      }
+    } catch (err) {
+      if (!append) setFeedVideos(mockVideos);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
   }, [isFollowing, isAuthenticated]);
+
+  useEffect(() => {
+    fetchFeed(1);
+  }, [fetchFeed]);
 
   const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
@@ -348,7 +361,14 @@ const FeedPage = ({ following: isFollowing }) => {
     if (newIndex !== activeIndex) {
       setActiveIndex(newIndex);
     }
-  }, [activeIndex]);
+
+    // Infinite scroll: load more when near the end
+    if (newIndex >= feedVideos.length - 3 && hasMore && !loadingMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      fetchFeed(nextPage, true);
+    }
+  }, [activeIndex, feedVideos.length, hasMore, loadingMore, page, fetchFeed]);
 
   const scrollToIndex = (index) => {
     if (scrollRef.current) {

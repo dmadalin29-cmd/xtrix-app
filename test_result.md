@@ -255,6 +255,66 @@ backend:
         - agent: "testing"
         - comment: "✅ TESTED: Notifications working correctly. Follow notification created and retrieved successfully, proper user data included in notification response."
 
+  - task: "Messages - Conversations"
+    implemented: true
+    working: true
+    file: "routes/messages.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "POST /api/messages/conversations, GET /api/messages/conversations - Create and retrieve conversations"
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Conversation management working correctly. Created conversation between 2 users (msg_user_a, msg_user_b), conversation retrieval working with proper user data, last message tracking, and unread count functionality."
+
+  - task: "Messages - Send/Receive"
+    implemented: true
+    working: true
+    file: "routes/messages.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "POST /api/messages/conversations/{id}/messages, GET /api/messages/conversations/{id}/messages - Send and retrieve messages"
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Message sending/receiving working correctly. Both users can send messages, message retrieval shows proper chronological order, sender information included, read status tracking, and message notifications created."
+
+  - task: "Users - Avatar Upload"
+    implemented: true
+    working: true
+    file: "routes/users.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "POST /api/users/me/avatar - Upload user avatar image"
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Avatar upload working correctly. Image file upload successful, file saved to uploads directory, avatar URL updated in user profile, proper file validation for image types."
+
+  - task: "Users - Profile Update"
+    implemented: true
+    working: true
+    file: "routes/users.py"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: false
+    status_history:
+        - working: "NA"
+        - agent: "testing"
+        - comment: "PUT /api/users/me - Update user profile (displayName, bio)"
+        - working: true
+        - agent: "testing"
+        - comment: "✅ TESTED: Profile update working correctly. DisplayName and bio fields updated successfully, changes persisted in database, updated profile data returned in response."
+
 frontend:
   - task: "Homepage Load"
     implemented: true
@@ -379,7 +439,7 @@ frontend:
 metadata:
   created_by: "main_agent"
   version: "1.0"
-  test_sequence: 4
+  test_sequence: 5
   run_ui: true
 
 test_plan:
@@ -394,6 +454,11 @@ test_plan:
     - "Logout"
   test_all: false
   test_priority: "stuck_first"
+  completed_new_tests:
+    - "Messages - Conversations"
+    - "Messages - Send/Receive"
+    - "Users - Avatar Upload"
+    - "Users - Profile Update"
 
 agent_communication:
     - agent: "main"
@@ -402,3 +467,5 @@ agent_communication:
     - message: "✅ BACKEND TESTING COMPLETE: All 15 backend endpoints tested successfully. Full test flow executed: Auth (register/login/me), Video operations (create/feed/like/bookmark/comments), User interactions (follow), Discovery features (trending/creators/search), and Notifications. All APIs working correctly with proper JWT authentication, data persistence, and response formats. Backend is production-ready."
     - agent: "testing"
     - message: "⚠️ CRITICAL FRONTEND ISSUE FOUND: ReactPlayer autoplay error is causing webpack-dev-server error overlay to block all interactions. Error: 'The play() request was interrupted because the media was removed from the document.' This iframe overlay intercepts pointer events, preventing clicks on Upload button, Comment button, Logout dropdown, and other UI elements. Root cause: ReactPlayer in FeedPage.jsx is trying to autoplay YouTube videos before they're fully mounted/loaded. SUCCESSFUL TESTS: Homepage load (✅), Auth modal (✅), User registration (✅), Discover page (✅), Profile page (✅), Like button (✅ partial). BLOCKED TESTS: Upload page navigation, Feed comment interactions, Logout. RECOMMENDATION: Fix ReactPlayer autoplay issue by either: 1) Disabling autoplay on mount, 2) Adding proper error handling to prevent overlay, 3) Ensuring video elements are fully loaded before play() is called, or 4) Disabling webpack error overlay in development."
+    - agent: "testing"
+    - message: "✅ MESSAGES & AVATAR TESTING COMPLETE: All new messaging and avatar upload endpoints tested successfully. Test flow executed: 1) Created 2 fresh users (msg_user_a, msg_user_b), 2) Created conversation between users, 3) Sent messages bidirectionally, 4) Retrieved messages with proper chronological order, 5) Verified conversation lists with unread counts, 6) Uploaded avatar image successfully, 7) Updated user profile (displayName, bio). All endpoints working correctly with proper authentication, data persistence, file upload handling, and response formats. Messages system fully functional with notifications."

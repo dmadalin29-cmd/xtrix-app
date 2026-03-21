@@ -41,6 +41,11 @@ export const usersAPI = {
   getById: (id) => api.get(`/users/${id}`),
   getByUsername: (username) => api.get(`/users/username/${username}`),
   updateProfile: (data) => api.put('/users/me', data),
+  uploadAvatar: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return api.post('/users/me/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
   toggleFollow: (id) => api.post(`/users/${id}/follow`),
   getFollowers: (id, page = 1) => api.get(`/users/${id}/followers?page=${page}`),
   getFollowing: (id, page = 1) => api.get(`/users/${id}/following?page=${page}`),
@@ -72,6 +77,14 @@ export const discoverAPI = {
 // ---- Notifications ----
 export const notificationsAPI = {
   getAll: () => api.get('/notifications'),
+};
+
+// ---- Messages ----
+export const messagesAPI = {
+  getConversations: () => api.get('/messages/conversations'),
+  createConversation: (targetUserId) => api.post(`/messages/conversations?target_user_id=${targetUserId}`),
+  getMessages: (conversationId, page = 1) => api.get(`/messages/conversations/${conversationId}/messages?page=${page}`),
+  sendMessage: (conversationId, text) => api.post(`/messages/conversations/${conversationId}/messages?text=${encodeURIComponent(text)}`),
 };
 
 export default api;
