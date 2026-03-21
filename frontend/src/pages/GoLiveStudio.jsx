@@ -40,6 +40,16 @@ const GoLiveStudio = () => {
   }, []);
 
   useEffect(() => {
+    // Ensure video stream is set when camera is enabled
+    if (cameraEnabled && streamRef.current && videoRef.current) {
+      if (videoRef.current.srcObject !== streamRef.current) {
+        videoRef.current.srcObject = streamRef.current;
+        videoRef.current.play().catch(err => console.warn('Video play:', err));
+      }
+    }
+  }, [cameraEnabled]);
+
+  useEffect(() => {
     // Duration timer
     if (isLive) {
       const interval = setInterval(() => {
@@ -52,19 +62,72 @@ const GoLiveStudio = () => {
   const startCamera = async () => {
     try {
       setError('');
+      console.log('🎥 Requesting camera access...');
+      
+      // Check if mediaDevices is available
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Browser-ul tău nu suportă acces la cameră. Încearcă Chrome, Firefox sau Safari.');
+      }
+      
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: 1280, height: 720 },
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'user'
+        },
         audio: true
       });
       
+      console.log('✅ Camera stream obtained:', stream.getTracks().map(t => ({ kind: t.kind, enabled: t.enabled })));
       streamRef.current = stream;
+      
       if (videoRef.current) {
+        console.log('✅ Setting srcObject on video element...');
         videoRef.current.srcObject = stream;
+        
+        // Wait for metadata and play
+        videoRef.current.onloadedmetadata = () => {
+          console.log('✅ Video metadata loaded, dimensions:', videoRef.current.videoWidth, 'x', videoRef.current.videoHeight);
+          videoRef.current.play()
+            .then(() => {
+              console.log('✅ Video playing successfully!');
+              setCameraEnabled(true);
+            })
+            .catch(playErr => {
+              console.warn('⚠️ Play warning:', playErr);
+              // Even if play fails, set enabled (video will show)
+              setCameraEnabled(true);
+            });
+        };
+        
+        // Fallback if onloadedmetadata doesn't fire
+        setTimeout(() => {
+          if (!videoRef.current.srcObject) {
+            console.warn('⚠️ Fallback: re-setting srcObject');
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(e => console.log('Fallback play:', e));
+          }
+          setCameraEnabled(true);
+        }, 1000);
+      } else {
+        console.error('❌ videoRef.current is null!');
+        setCameraEnabled(true); // Set anyway
       }
-      setCameraEnabled(true);
     } catch (err) {
-      console.error('Camera error:', err);
-      setError('Nu se poate accesa camera. Verifică permisiunile browserului.');
+      console.error('❌ Camera error:', err);
+      let errorMsg = 'Nu se poate accesa camera. ';
+      
+      if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        errorMsg += 'Nicio cameră detectată pe dispozitiv.';
+      } else if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        errorMsg += 'Permisiunea pentru cameră a fost refuzată. Click pe iconița de cameră din bara browser-ului și permite accesul.';
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        errorMsg += 'Camera este folosită de altă aplicație. Închide alte aplicații care folosesc camera.';
+      } else {
+        errorMsg += err.message;
+      }
+      
+      setError(errorMsg);
     }
   };
 
@@ -200,6 +263,18 @@ const GoLiveStudio = () => {
 
   return (
     <div className="fixed inset-0 z-50" style={{ background: 'rgba(5,5,10,1)' }}>
+      {/* Debug Info (remove in production) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="absolute top-20 left-4 p-3 rounded-lg text-xs" style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)', maxWidth: '250px' }}>
+          <div className="text-white/50 space-y-1">
+            <div>Camera State: <span className={cameraEnabled ? 'text-green-400' : 'text-red-400'}>{cameraEnabled ? 'ENABLED' : 'DISABLED'}</span></div>
+            <div>Stream Ref: <span className={streamRef.current ? 'text-green-400' : 'text-red-400'}>{streamRef.current ? 'SET' : 'NULL'}</span></div>
+            <div>Video Ref: <span className={videoRef.current ? 'text-green-400' : 'text-red-400'}>{videoRef.current ? 'SET' : 'NULL'}</span></div>
+            {streamRef.current && <div>Tracks: {streamRef.current.getTracks().map(t => t.kind).join(', ')}</div>}
+          </div>
+        </div>
+      )}
+      
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 h-16 flex items-center justify-between px-6 z-10" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(20px)' }}>
         <div className="flex items-center gap-3">
@@ -245,9 +320,15 @@ const GoLiveStudio = () => {
         {/* Video Preview */}
         <div className="flex-1 flex items-center justify-center p-8">
           <div className="relative w-full max-w-3xl aspect-video rounded-2xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            {cameraEnabled ? (
-              <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-            ) : (
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              muted 
+              playsInline 
+              className="w-full h-full object-cover"
+              style={{ display: cameraEnabled ? 'block' : 'none' }}
+            />
+            {!cameraEnabled && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-center">
                   <VideoOff className="w-16 h-16 text-white/20 mx-auto mb-4" />

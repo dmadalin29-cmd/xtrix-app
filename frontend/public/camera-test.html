@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Camera Test - KdM</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0a0a0f;
+            color: white;
+            font-family: system-ui;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        video {
+            width: 100%;
+            max-width: 640px;
+            height: auto;
+            background: black;
+            border: 2px solid #ff0050;
+            border-radius: 12px;
+        }
+        button {
+            padding: 12px 24px;
+            background: #ff0050;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #ff3366;
+        }
+        .log {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .error {
+            color: #ff4444;
+        }
+        .success {
+            color: #00ff88;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎥 KdM Camera Test</h1>
+        <p>Testează accesul la cameră:</p>
+        
+        <video id="video" autoplay muted playsinline></video>
+        
+        <div>
+            <button onclick="startCamera()">Pornește Camera</button>
+            <button onclick="stopCamera()">Oprește Camera</button>
+        </div>
+        
+        <div class="log" id="log"></div>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const logDiv = document.getElementById('log');
+        let stream = null;
+
+        function log(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'error' : type === 'success' ? 'success' : '';
+            logDiv.innerHTML += `<div class="${className}">[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        async function startCamera() {
+            try {
+                log('🎥 Cerere acces la cameră...', 'info');
+                
+                // Check support
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    throw new Error('Browser-ul nu suportă getUserMedia');
+                }
+                
+                // Request camera
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    },
+                    audio: true
+                });
+                
+                log(`✅ Stream obținut! Tracks: ${stream.getTracks().map(t => t.kind).join(', ')}`, 'success');
+                
+                // Set video source
+                video.srcObject = stream;
+                log('✅ srcObject setat pe video element', 'success');
+                
+                // Wait for metadata and play
+                video.onloadedmetadata = () => {
+                    log(`✅ Metadata loaded: ${video.videoWidth}x${video.videoHeight}`, 'success');
+                    video.play()
+                        .then(() => log('✅ Video se redă!', 'success'))
+                        .catch(err => log(`⚠️ Play error: ${err.message}`, 'error'));
+                };
+                
+            } catch (err) {
+                log(`❌ Eroare: ${err.name} - ${err.message}`, 'error');
+                
+                if (err.name === 'NotAllowedError') {
+                    alert('❌ Permisiunea pentru cameră a fost refuzată!\n\n1. Click pe iconița 🔒 sau 🎥 din bara de adrese\n2. Permite accesul la cameră\n3. Reîmprospătează pagina');
+                } else if (err.name === 'NotFoundError') {
+                    alert('❌ Nicio cameră detectată!\n\nVerifică că:\n- Camera e conectată\n- Camera nu e folosită de altă aplicație\n- Driver-ele sunt instalate');
+                }
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    log(`⏹️ Track oprit: ${track.kind}`, 'info');
+                });
+                stream = null;
+                video.srcObject = null;
+                log('✅ Camera oprită', 'success');
+            }
+        }
+
+        log('📱 Pagina de test încărcată. Click pe "Pornește Camera" pentru a testa.', 'info');
+    </script>
+</body>
+</html>
