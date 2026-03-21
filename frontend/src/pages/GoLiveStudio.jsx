@@ -393,21 +393,30 @@ const GoLiveStudio = () => {
 
                 <div>
                   <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block">Categorie</label>
-                  <select
-                    value={streamCategory}
-                    onChange={(e) => setStreamCategory(e.target.value)}
-                    className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
-                    <option value="other">Altele</option>
-                    <option value="gaming">Gaming</option>
-                    <option value="music">Muzică</option>
-                    <option value="dance">Dans</option>
-                    <option value="talk">Discuții</option>
-                    <option value="cooking">Cooking</option>
-                    <option value="fitness">Fitness</option>
-                    <option value="art">Artă</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={streamCategory}
+                      onChange={(e) => setStreamCategory(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none appearance-none cursor-pointer"
+                      style={{ 
+                        background: 'rgba(255,255,255,0.04)', 
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'rgba(255,255,255,0.4)\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 12px center',
+                        paddingRight: '36px'
+                      }}
+                    >
+                      <option value="other" style={{ background: '#1a1a24', color: 'white' }}>Altele</option>
+                      <option value="gaming" style={{ background: '#1a1a24', color: 'white' }}>🎮 Gaming</option>
+                      <option value="music" style={{ background: '#1a1a24', color: 'white' }}>🎵 Muzică</option>
+                      <option value="dance" style={{ background: '#1a1a24', color: 'white' }}>💃 Dans</option>
+                      <option value="talk" style={{ background: '#1a1a24', color: 'white' }}>💬 Discuții</option>
+                      <option value="cooking" style={{ background: '#1a1a24', color: 'white' }}>👨‍🍳 Cooking</option>
+                      <option value="fitness" style={{ background: '#1a1a24', color: 'white' }}>💪 Fitness</option>
+                      <option value="art" style={{ background: '#1a1a24', color: 'white' }}>🎨 Artă</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="pt-4">
