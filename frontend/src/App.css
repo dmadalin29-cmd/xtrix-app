@@ -1,0 +1,6 @@
+/* KdM App Global Styles */
+.App {
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
