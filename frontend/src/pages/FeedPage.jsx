@@ -2,45 +2,75 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Heart, MessageCircle, Share2, Bookmark, Music, Volume2,
-  VolumeX, Play, Pause, ChevronUp, ChevronDown, BadgeCheck,
-  Send, X, MoreHorizontal
+  VolumeX, Play, ChevronUp, ChevronDown, BadgeCheck,
+  Send, X
 } from 'lucide-react';
-import { videos, comments as mockComments, formatNumber } from '../data/mockData';
+import { videos as mockVideos, comments as mockComments, formatNumber } from '../data/mockData';
+import { videosAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import ReactPlayer from 'react-player';
 
 const VideoCard = ({ video, isActive }) => {
-  const [liked, setLiked] = useState(false);
-  const [bookmarked, setBookmarked] = useState(false);
-  const [likeCount, setLikeCount] = useState(video.likes);
+  const { requireAuth, isAuthenticated } = useAuth();
+  const [liked, setLiked] = useState(video.isLiked || false);
+  const [bookmarked, setBookmarked] = useState(video.isBookmarked || false);
+  const [likeCount, setLikeCount] = useState(video.likes || 0);
   const [showComments, setShowComments] = useState(false);
   const [playing, setPlaying] = useState(false);
   const [muted, setMuted] = useState(true);
   const [showHeart, setShowHeart] = useState(false);
   const [following, setFollowing] = useState(false);
-  const playerRef = useRef(null);
 
   useEffect(() => {
     if (isActive) {
       setPlaying(true);
+      // Record view
+      if (video.id) {
+        videosAPI.recordView(video.id).catch(() => {});
+      }
     } else {
       setPlaying(false);
     }
-  }, [isActive]);
+  }, [isActive, video.id]);
 
-  const handleLike = () => {
-    setLiked(!liked);
-    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
-    if (!liked) {
+  const handleLike = async () => {
+    if (!requireAuth()) return;
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLikeCount(newLiked ? likeCount + 1 : likeCount - 1);
+    if (newLiked) {
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 800);
+    }
+    try {
+      const res = await videosAPI.toggleLike(video.id);
+      setLiked(res.data.liked);
+      setLikeCount(res.data.likeCount);
+    } catch (err) {
+      setLiked(!newLiked);
+      setLikeCount(newLiked ? likeCount : likeCount + 1);
+    }
+  };
+
+  const handleBookmark = async () => {
+    if (!requireAuth()) return;
+    const newBookmarked = !bookmarked;
+    setBookmarked(newBookmarked);
+    try {
+      const res = await videosAPI.toggleBookmark(video.id);
+      setBookmarked(res.data.bookmarked);
+    } catch (err) {
+      setBookmarked(!newBookmarked);
     }
   };
 
   const handleDoubleClick = () => {
     if (!liked) handleLike();
-    setShowHeart(true);
-    setTimeout(() => setShowHeart(false), 800);
+    else {
+      setShowHeart(true);
+      setTimeout(() => setShowHeart(false), 800);
+    }
   };
 
   return (
@@ -49,7 +79,6 @@ const VideoCard = ({ video, isActive }) => {
       <div className="relative h-full aspect-[9/16] max-h-[calc(100vh-96px)] rounded-2xl overflow-hidden group cursor-pointer" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }} onDoubleClick={handleDoubleClick} onClick={() => setPlaying(!playing)}>
         {/* Video Player */}
         <ReactPlayer
-          ref={playerRef}
           url={video.videoUrl}
           width="100%"
           height="100%"
@@ -57,15 +86,11 @@ const VideoCard = ({ video, isActive }) => {
           muted={muted}
           loop
           style={{ position: 'absolute', top: 0, left: 0 }}
-          config={{
-            youtube: {
-              playerVars: { controls: 0, modestbranding: 1, rel: 0, showinfo: 0 }
-            }
-          }}
+          config={{ youtube: { playerVars: { controls: 0, modestbranding: 1, rel: 0, showinfo: 0 } } }}
         />
 
         {/* Thumbnail fallback */}
-        <img src={video.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ zIndex: playing ? -1 : 1 }} />
+        {video.thumbnail && <img src={video.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ zIndex: playing ? -1 : 1 }} />}
 
         {/* Play/Pause overlay */}
         <AnimatePresence>
@@ -94,13 +119,13 @@ const VideoCard = ({ video, isActive }) => {
         <div className="absolute bottom-0 left-0 right-0 p-5 z-[3]">
           <div className="flex items-center gap-2 mb-3">
             <Avatar className="w-10 h-10 ring-2 ring-white/20">
-              <AvatarImage src={video.user.avatar} />
-              <AvatarFallback>{video.user.displayName[0]}</AvatarFallback>
+              <AvatarImage src={video.user?.avatar} />
+              <AvatarFallback>{(video.user?.displayName || 'U')[0]}</AvatarFallback>
             </Avatar>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold text-white">{video.user.username}</span>
-                {video.user.verified && <BadgeCheck className="w-3.5 h-3.5 text-[#00f5d4]" />}
+                <span className="text-sm font-bold text-white">{video.user?.username}</span>
+                {video.user?.verified && <BadgeCheck className="w-3.5 h-3.5 text-[#00f5d4]" />}
               </div>
               <span className="text-[11px] text-white/50">{video.createdAt}</span>
             </div>
@@ -114,7 +139,7 @@ const VideoCard = ({ video, isActive }) => {
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
               <Music className="w-3.5 h-3.5 text-white/70" />
-              <span className="text-xs text-white/70 max-w-[180px] truncate">{video.music}</span>
+              <span className="text-xs text-white/70 max-w-[180px] truncate">{video.music || 'Original Sound'}</span>
             </div>
           </div>
         </div>
@@ -125,9 +150,8 @@ const VideoCard = ({ video, isActive }) => {
         </button>
       </div>
 
-      {/* Action Buttons - Right side */}
+      {/* Action Buttons */}
       <div className="flex flex-col items-center gap-6">
-        {/* Like */}
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
           <motion.button onClick={handleLike} animate={liked ? { scale: [1, 1.3, 1] } : {}} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${liked ? 'bg-[#ff0050]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`} style={liked ? { boxShadow: '0 0 20px rgba(255,0,80,0.3)' } : {}}>
             <Heart className={`w-6 h-6 ${liked ? 'text-[#ff0050]' : 'text-white'}`} fill={liked ? '#ff0050' : 'none'} />
@@ -135,33 +159,29 @@ const VideoCard = ({ video, isActive }) => {
           <span className={`text-xs font-semibold ${liked ? 'text-[#ff0050]' : 'text-white/60'}`}>{formatNumber(likeCount)}</span>
         </motion.div>
 
-        {/* Comments */}
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
           <button onClick={() => setShowComments(true)} className="w-12 h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors">
             <MessageCircle className="w-6 h-6 text-white" />
           </button>
-          <span className="text-xs font-semibold text-white/60">{formatNumber(video.comments)}</span>
+          <span className="text-xs font-semibold text-white/60">{formatNumber(video.comments || 0)}</span>
         </motion.div>
 
-        {/* Bookmark */}
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <motion.button onClick={() => setBookmarked(!bookmarked)} animate={bookmarked ? { scale: [1, 1.3, 1] } : {}} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${bookmarked ? 'bg-[#f5c518]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`}>
+          <motion.button onClick={handleBookmark} animate={bookmarked ? { scale: [1, 1.3, 1] } : {}} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${bookmarked ? 'bg-[#f5c518]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`}>
             <Bookmark className={`w-6 h-6 ${bookmarked ? 'text-[#f5c518]' : 'text-white'}`} fill={bookmarked ? '#f5c518' : 'none'} />
           </motion.button>
-          <span className={`text-xs font-semibold ${bookmarked ? 'text-[#f5c518]' : 'text-white/60'}`}>{formatNumber(video.bookmarks)}</span>
+          <span className={`text-xs font-semibold ${bookmarked ? 'text-[#f5c518]' : 'text-white/60'}`}>{formatNumber(video.bookmarks || 0)}</span>
         </motion.div>
 
-        {/* Share */}
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
           <button className="w-12 h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors">
             <Share2 className="w-6 h-6 text-white" />
           </button>
-          <span className="text-xs font-semibold text-white/60">{formatNumber(video.shares)}</span>
+          <span className="text-xs font-semibold text-white/60">{formatNumber(video.shares || 0)}</span>
         </motion.div>
 
-        {/* Music disc */}
         <div className={`music-disc mt-2 ${playing ? 'animate-spin-slow' : ''}`}>
-          <img src={video.user.avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+          <img src={video.user?.avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
         </div>
       </div>
 
@@ -176,66 +196,87 @@ const VideoCard = ({ video, isActive }) => {
 };
 
 const CommentsPanel = ({ video, onClose }) => {
+  const { requireAuth, isAuthenticated } = useAuth();
   const [commentText, setCommentText] = useState('');
-  const [localComments, setLocalComments] = useState(mockComments);
+  const [localComments, setLocalComments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchComments = async () => {
+      try {
+        const res = await videosAPI.getComments(video.id);
+        setLocalComments(res.data.comments || []);
+      } catch (err) {
+        setLocalComments(mockComments);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchComments();
+  }, [video.id]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
-    const newComment = {
-      id: `c_new_${Date.now()}`,
-      user: { id: 'self', username: 'alex_kdm', displayName: 'Alex Creator', avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&h=150&fit=crop&crop=face' },
-      text: commentText,
-      likes: 0,
-      time: 'now',
-      replies: 0
-    };
-    setLocalComments([newComment, ...localComments]);
-    setCommentText('');
+    if (!requireAuth()) return;
+    try {
+      const res = await videosAPI.createComment(video.id, commentText);
+      setLocalComments([res.data, ...localComments]);
+      setCommentText('');
+    } catch (err) {
+      console.error('Failed to post comment');
+    }
   };
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md h-[70vh] rounded-2xl overflow-hidden flex flex-col" style={{ background: 'rgba(15,15,25,0.95)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.08)' }}>
-        {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-          <h3 className="text-base font-bold text-white">{formatNumber(video.comments)} Comments</h3>
+          <h3 className="text-base font-bold text-white">Comments</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/[0.06] transition-colors">
             <X className="w-5 h-5 text-white/60" />
           </button>
         </div>
 
-        {/* Comments list */}
         <div className="flex-1 overflow-y-auto p-5 space-y-5">
-          {localComments.map((comment, i) => (
-            <motion.div key={comment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }} className="flex gap-3">
-              <Avatar className="w-9 h-9 flex-shrink-0">
-                <AvatarImage src={comment.user.avatar} />
-                <AvatarFallback>{comment.user.displayName[0]}</AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-white/90">{comment.user.username}</span>
-                  <span className="text-[10px] text-white/30">{comment.time}</span>
+          {loading ? (
+            <div className="flex items-center justify-center py-10">
+              <div className="w-6 h-6 border-2 border-white/10 border-t-[#ff0050] rounded-full animate-spin" />
+            </div>
+          ) : localComments.length === 0 ? (
+            <div className="text-center py-10">
+              <p className="text-sm text-white/30">No comments yet. Be the first!</p>
+            </div>
+          ) : (
+            localComments.map((comment, i) => (
+              <motion.div key={comment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="flex gap-3">
+                <Avatar className="w-9 h-9 flex-shrink-0">
+                  <AvatarImage src={comment.user?.avatar} />
+                  <AvatarFallback>{(comment.user?.displayName || 'U')[0]}</AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-white/90">{comment.user?.username}</span>
+                    <span className="text-[10px] text-white/30">{comment.time}</span>
+                  </div>
+                  <p className="text-sm text-white/70 mt-1 leading-relaxed">{comment.text}</p>
+                  <div className="flex items-center gap-4 mt-2">
+                    <button className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/60 transition-colors">
+                      <Heart className="w-3.5 h-3.5" />
+                      {formatNumber(comment.likes || 0)}
+                    </button>
+                    <button className="text-[11px] text-white/40 hover:text-white/60 transition-colors">Reply</button>
+                  </div>
                 </div>
-                <p className="text-sm text-white/70 mt-1 leading-relaxed">{comment.text}</p>
-                <div className="flex items-center gap-4 mt-2">
-                  <button className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/60 transition-colors">
-                    <Heart className="w-3.5 h-3.5" />
-                    {formatNumber(comment.likes)}
-                  </button>
-                  <button className="text-[11px] text-white/40 hover:text-white/60 transition-colors">Reply ({comment.replies})</button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+              </motion.div>
+            ))
+          )}
         </div>
 
-        {/* Input */}
         <form onSubmit={handleSubmit} className="p-4 border-t border-white/[0.06] flex items-center gap-3">
-          <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder="Add a comment..." className="flex-1 bg-white/[0.04] rounded-full px-4 py-2.5 text-sm text-white placeholder-white/30 outline-none border border-white/[0.06] focus:border-[#ff0050]/30 transition-colors" />
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={!commentText.trim()} className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-30 transition-opacity" style={{ background: commentText.trim() ? '#ff0050' : 'rgba(255,255,255,0.06)' }}>
+          <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={isAuthenticated ? "Add a comment..." : "Sign in to comment"} disabled={!isAuthenticated} className="flex-1 bg-white/[0.04] rounded-full px-4 py-2.5 text-sm text-white placeholder-white/30 outline-none border border-white/[0.06] focus:border-[#ff0050]/30 transition-colors disabled:opacity-50" />
+          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={!commentText.trim() || !isAuthenticated} className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-30 transition-opacity" style={{ background: commentText.trim() && isAuthenticated ? '#ff0050' : 'rgba(255,255,255,0.06)' }}>
             <Send className="w-4 h-4 text-white" />
           </motion.button>
         </form>
@@ -246,8 +287,37 @@ const CommentsPanel = ({ video, onClose }) => {
 
 const FeedPage = ({ following: isFollowing }) => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [feedVideos, setFeedVideos] = useState([]);
+  const [loading, setLoading] = useState(true);
   const scrollRef = useRef(null);
-  const feedVideos = isFollowing ? videos.slice(2, 6) : videos;
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const fetchFeed = async () => {
+      try {
+        let res;
+        if (isFollowing && isAuthenticated) {
+          res = await videosAPI.getFollowingFeed(1, 20);
+        } else {
+          res = await videosAPI.getFeed(1, 20);
+        }
+        const vids = res.data.videos || [];
+        // Filter to videos that have proper thumbnails or YouTube URLs
+        const goodVids = vids.filter(v => v.thumbnail || (v.videoUrl && v.videoUrl.includes('youtube')));
+        if (goodVids.length > 0) {
+          setFeedVideos(goodVids);
+        } else {
+          // Fallback to mock data if no proper videos exist yet
+          setFeedVideos(mockVideos);
+        }
+      } catch (err) {
+        setFeedVideos(mockVideos);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFeed();
+  }, [isFollowing, isAuthenticated]);
 
   const handleScroll = useCallback(() => {
     if (!scrollRef.current) return;
@@ -265,6 +335,17 @@ const FeedPage = ({ following: isFollowing }) => {
       scrollRef.current.scrollTo({ top: index * itemHeight, behavior: 'smooth' });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-10 h-10 border-2 border-white/10 border-t-[#ff0050] rounded-full animate-spin" />
+          <p className="text-xs text-white/30">Loading feed...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full relative">

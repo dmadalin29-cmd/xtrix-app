@@ -2,6 +2,8 @@ import React, { Suspense, lazy } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
+import { AuthProvider } from './contexts/AuthContext';
+import AuthModal from './components/auth/AuthModal';
 
 const FeedPage = lazy(() => import('./pages/FeedPage'));
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage'));
@@ -21,19 +23,22 @@ function App() {
   return (
     <div className="App">
       <BrowserRouter>
-        <Layout>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<FeedPage />} />
-              <Route path="/discover" element={<DiscoverPage />} />
-              <Route path="/following" element={<FeedPage following />} />
-              <Route path="/live" element={<DiscoverPage live />} />
-              <Route path="/profile" element={<ProfilePage />} />
-              <Route path="/profile/:username" element={<ProfilePage />} />
-              <Route path="/upload" element={<UploadPage />} />
-            </Routes>
-          </Suspense>
-        </Layout>
+        <AuthProvider>
+          <AuthModal />
+          <Layout>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<FeedPage />} />
+                <Route path="/discover" element={<DiscoverPage />} />
+                <Route path="/following" element={<FeedPage following />} />
+                <Route path="/live" element={<DiscoverPage live />} />
+                <Route path="/profile" element={<ProfilePage />} />
+                <Route path="/profile/:username" element={<ProfilePage />} />
+                <Route path="/upload" element={<UploadPage />} />
+              </Routes>
+            </Suspense>
+          </Layout>
+        </AuthProvider>
       </BrowserRouter>
     </div>
   );

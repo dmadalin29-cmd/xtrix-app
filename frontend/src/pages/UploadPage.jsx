@@ -1,25 +1,44 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Upload, Film, Music, Hash, AtSign, Globe, Lock, Users,
-  X, Plus, Sparkles, Image, Scissors, Type, Wand2, Check,
-  ChevronDown, Info
+  X, Sparkles, Image, Scissors, Type, Check
 } from 'lucide-react';
 import { Switch } from '../components/ui/switch';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../components/ui/tabs';
+import { videosAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const UploadPage = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated, requireAuth } = useAuth();
   const [dragOver, setDragOver] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [caption, setCaption] = useState('');
   const [hashtags, setHashtags] = useState('');
+  const [videoUrl, setVideoUrl] = useState('');
   const [visibility, setVisibility] = useState('public');
   const [allowComments, setAllowComments] = useState(true);
   const [allowDuet, setAllowDuet] = useState(true);
   const [allowStitch, setAllowStitch] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadComplete, setUploadComplete] = useState(false);
+  const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+
+  // Check auth
+  if (!isAuthenticated) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-20">
+        <Upload className="w-16 h-16 text-white/20 mb-4" />
+        <h2 className="text-xl font-bold text-white mb-2">Sign in to upload</h2>
+        <p className="text-sm text-white/40 mb-6">Create an account to start sharing your clips</p>
+        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => requireAuth()} className="px-8 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#ff0050', boxShadow: '0 0 20px rgba(255,0,80,0.3)' }}>
+          Sign In
+        </motion.button>
+      </div>
+    );
+  }
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -35,20 +54,47 @@ const UploadPage = () => {
     if (file) setSelectedFile(file);
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
+    setError('');
+    if (!selectedFile && !videoUrl) {
+      setError('Please select a video file or enter a video URL');
+      return;
+    }
+
     setIsUploading(true);
-    setTimeout(() => {
-      setIsUploading(false);
+    try {
+      const formData = new FormData();
+      formData.append('caption', caption);
+      formData.append('hashtags', hashtags);
+      formData.append('visibility', visibility);
+      formData.append('allowComments', allowComments);
+      formData.append('allowDuet', allowDuet);
+      formData.append('allowStitch', allowStitch);
+
+      if (selectedFile) {
+        formData.append('file', selectedFile);
+      }
+      if (videoUrl) {
+        formData.append('videoUrl', videoUrl);
+      }
+
+      await videosAPI.create(formData);
       setUploadComplete(true);
-    }, 3000);
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Upload failed. Please try again.');
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const resetUpload = () => {
     setSelectedFile(null);
     setCaption('');
     setHashtags('');
+    setVideoUrl('');
     setUploadComplete(false);
     setIsUploading(false);
+    setError('');
   };
 
   return (
@@ -65,10 +111,15 @@ const UploadPage = () => {
               <Check className="w-10 h-10 text-[#00f5d4]" />
             </motion.div>
             <h2 className="text-2xl font-bold text-white mb-2">Upload Complete!</h2>
-            <p className="text-sm text-white/40 mb-8">Your video is now being processed and will be live shortly.</p>
-            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={resetUpload} className="px-8 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#ff0050', boxShadow: '0 0 20px rgba(255,0,80,0.3)' }}>
-              Upload Another
-            </motion.button>
+            <p className="text-sm text-white/40 mb-8">Your video is now live on KdM.</p>
+            <div className="flex gap-4">
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={resetUpload} className="px-8 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#ff0050', boxShadow: '0 0 20px rgba(255,0,80,0.3)' }}>
+                Upload Another
+              </motion.button>
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => navigate('/')} className="px-8 py-3 rounded-xl text-sm font-semibold text-white/70" style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                Go to Feed
+              </motion.button>
+            </div>
           </motion.div>
         ) : (
           <motion.div key="upload" className="flex gap-8">
@@ -80,7 +131,7 @@ const UploadPage = () => {
                   onDragLeave={() => setDragOver(false)}
                   onDrop={handleDrop}
                   animate={{ borderColor: dragOver ? 'rgba(255,0,80,0.5)' : 'rgba(255,255,255,0.06)' }}
-                  className="relative h-[450px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden"
+                  className="relative h-[350px] rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer overflow-hidden"
                   style={{ background: dragOver ? 'rgba(255,0,80,0.05)' : 'rgba(255,255,255,0.02)' }}
                   onClick={() => fileInputRef.current?.click()}
                 >
@@ -91,7 +142,7 @@ const UploadPage = () => {
                     </div>
                     <h3 className="text-lg font-bold text-white mb-2">Select video to upload</h3>
                     <p className="text-sm text-white/40 mb-1">Or drag and drop a file</p>
-                    <p className="text-xs text-white/25 mb-6">MP4 or WebM · 720p or higher · Up to 10 minutes</p>
+                    <p className="text-xs text-white/25 mb-6">MP4 or WebM &middot; 720p or higher &middot; Up to 10 minutes</p>
                     <motion.div whileHover={{ scale: 1.05 }} className="px-8 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#ff0050', boxShadow: '0 0 20px rgba(255,0,80,0.3)' }}>
                       Select File
                     </motion.div>
@@ -99,7 +150,7 @@ const UploadPage = () => {
                 </motion.div>
               ) : (
                 <div className="rounded-2xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <div className="h-[300px] flex items-center justify-center relative" style={{ background: 'rgba(0,0,0,0.5)' }}>
+                  <div className="h-[250px] flex items-center justify-center relative" style={{ background: 'rgba(0,0,0,0.5)' }}>
                     <Film className="w-16 h-16 text-white/20" />
                     <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
                       <span className="text-sm text-white/70 truncate">{selectedFile.name}</span>
@@ -108,7 +159,6 @@ const UploadPage = () => {
                       </button>
                     </div>
                   </div>
-                  {/* Edit tools */}
                   <div className="flex items-center gap-3 p-4 border-t border-white/[0.04]">
                     {[{ icon: Scissors, label: 'Trim' }, { icon: Music, label: 'Sound' }, { icon: Type, label: 'Text' }, { icon: Sparkles, label: 'Effects' }, { icon: Image, label: 'Cover' }].map((tool) => (
                       <motion.button key={tool.label} whileHover={{ scale: 1.05, y: -2 }} className="flex flex-col items-center gap-1.5 px-4 py-2 rounded-xl hover:bg-white/[0.04] transition-colors">
@@ -119,15 +169,27 @@ const UploadPage = () => {
                   </div>
                 </div>
               )}
+
+              {/* Or paste YouTube URL */}
+              <div className="mt-4">
+                <label className="text-sm font-semibold text-white/60 mb-2 block">Or paste a YouTube URL</label>
+                <input
+                  type="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="https://youtube.com/watch?v=..."
+                  className="w-full bg-transparent text-sm text-white placeholder-white/25 px-4 py-3 outline-none rounded-xl"
+                  style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+                />
+              </div>
             </div>
 
             {/* Right - Details */}
             <div className="w-[340px] space-y-6">
-              {/* Caption */}
               <div>
                 <label className="text-sm font-semibold text-white/80 mb-2 block">Caption</label>
                 <div className="relative rounded-xl overflow-hidden" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                  <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write a caption that describes your video..." rows={4} maxLength={2200} className="w-full bg-transparent text-sm text-white placeholder-white/25 p-4 outline-none resize-none" />
+                  <textarea value={caption} onChange={(e) => setCaption(e.target.value)} placeholder="Write a caption..." rows={4} maxLength={2200} className="w-full bg-transparent text-sm text-white placeholder-white/25 p-4 outline-none resize-none" />
                   <div className="flex items-center justify-between px-4 py-2 border-t border-white/[0.04]">
                     <div className="flex items-center gap-2">
                       <button className="text-white/30 hover:text-white/60 transition-colors"><AtSign className="w-4 h-4" /></button>
@@ -138,13 +200,11 @@ const UploadPage = () => {
                 </div>
               </div>
 
-              {/* Hashtags */}
               <div>
                 <label className="text-sm font-semibold text-white/80 mb-2 block">Hashtags</label>
                 <input type="text" value={hashtags} onChange={(e) => setHashtags(e.target.value)} placeholder="#fyp #viral #kdm" className="w-full bg-transparent text-sm text-white placeholder-white/25 px-4 py-3 outline-none rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
               </div>
 
-              {/* Visibility */}
               <div>
                 <label className="text-sm font-semibold text-white/80 mb-2 block">Who can view</label>
                 <div className="flex gap-2">
@@ -160,7 +220,6 @@ const UploadPage = () => {
                 </div>
               </div>
 
-              {/* Toggles */}
               <div className="space-y-4">
                 {[
                   { label: 'Allow comments', state: allowComments, setter: setAllowComments },
@@ -174,12 +233,15 @@ const UploadPage = () => {
                 ))}
               </div>
 
-              {/* Upload Button */}
+              {error && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xs text-red-400 text-center">{error}</motion.p>
+              )}
+
               <div className="flex gap-3 pt-2">
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={resetUpload} className="flex-1 py-3 rounded-xl text-sm font-semibold text-white/60 transition-colors" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
                   Discard
                 </motion.button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleUpload} disabled={!selectedFile || isUploading} className="flex-1 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-40 transition-all relative overflow-hidden" style={{ background: '#ff0050', boxShadow: selectedFile ? '0 0 20px rgba(255,0,80,0.3)' : 'none' }}>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={handleUpload} disabled={(!selectedFile && !videoUrl) || isUploading} className="flex-1 py-3 rounded-xl text-sm font-bold text-white disabled:opacity-40 transition-all relative overflow-hidden" style={{ background: '#ff0050', boxShadow: (selectedFile || videoUrl) ? '0 0 20px rgba(255,0,80,0.3)' : 'none' }}>
                   {isUploading ? (
                     <div className="flex items-center justify-center gap-2">
                       <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
