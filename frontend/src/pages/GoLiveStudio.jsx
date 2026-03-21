@@ -4,6 +4,7 @@ import { Video, VideoOff, Mic, MicOff, Radio, X, Users, Heart, Send, Settings, A
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { liveAPI } from '../services/api';
+import GlassDropdown from '../components/GlassDropdown';
 
 const GoLiveStudio = () => {
   const navigate = useNavigate();
@@ -378,46 +379,28 @@ const GoLiveStudio = () => {
 
               <div className="space-y-4">
                 <div>
-                  <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block">Titlu Live</label>
+                  <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block font-body">Titlu Live</label>
                   <input
                     type="text"
                     value={streamTitle}
                     onChange={(e) => setStreamTitle(e.target.value)}
                     placeholder="Ex: Sesiune Q&A LIVE! 🔥"
                     maxLength={100}
-                    className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/30 outline-none transition-colors"
-                    style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    className="w-full px-4 py-3 rounded-xl text-sm text-white placeholder-white/30 outline-none transition-all font-body focus:shadow-glow-cyan"
+                    style={{ 
+                      background: 'rgba(255,255,255,0.04)', 
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      backdropFilter: 'blur(10px)'
+                    }}
                   />
-                  <p className="text-xs text-white/30 mt-1">{streamTitle.length}/100</p>
+                  <p className="text-xs text-white/30 mt-1 font-body">{streamTitle.length}/100</p>
                 </div>
 
-                <div>
-                  <label className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-2 block">Categorie</label>
-                  <div className="relative">
-                    <select
-                      value={streamCategory}
-                      onChange={(e) => setStreamCategory(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl text-sm text-white outline-none appearance-none cursor-pointer"
-                      style={{ 
-                        background: 'rgba(255,255,255,0.04)', 
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'12\' height=\'12\' viewBox=\'0 0 12 12\'%3E%3Cpath fill=\'rgba(255,255,255,0.4)\' d=\'M6 9L1 4h10z\'/%3E%3C/svg%3E")',
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 12px center',
-                        paddingRight: '36px'
-                      }}
-                    >
-                      <option value="other" style={{ background: '#1a1a24', color: 'white' }}>Altele</option>
-                      <option value="gaming" style={{ background: '#1a1a24', color: 'white' }}>🎮 Gaming</option>
-                      <option value="music" style={{ background: '#1a1a24', color: 'white' }}>🎵 Muzică</option>
-                      <option value="dance" style={{ background: '#1a1a24', color: 'white' }}>💃 Dans</option>
-                      <option value="talk" style={{ background: '#1a1a24', color: 'white' }}>💬 Discuții</option>
-                      <option value="cooking" style={{ background: '#1a1a24', color: 'white' }}>👨‍🍳 Cooking</option>
-                      <option value="fitness" style={{ background: '#1a1a24', color: 'white' }}>💪 Fitness</option>
-                      <option value="art" style={{ background: '#1a1a24', color: 'white' }}>🎨 Artă</option>
-                    </select>
-                  </div>
-                </div>
+                <GlassDropdown
+                  label="Categorie"
+                  value={streamCategory}
+                  onChange={setStreamCategory}
+                />
 
                 <div className="pt-4">
                   <motion.button

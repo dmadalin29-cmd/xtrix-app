@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Unbounded:wght@400;700;900&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -28,13 +29,19 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Outfit', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--kdm-bg);
   color: var(--kdm-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow: hidden;
   height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Unbounded', 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 #root {
@@ -87,6 +94,28 @@ body {
 
 .glow-cyan {
   box-shadow: 0 0 30px rgba(0, 245, 212, 0.2), 0 0 60px rgba(0, 245, 212, 0.1);
+}
+
+
+
+/* Ultra-modern glass effects */
+.crystal-glass {
+  background: rgba(10, 10, 20, 0.8);
+  backdrop-filter: blur(24px) saturate(150%);
+  -webkit-backdrop-filter: blur(24px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Selection style */
+::selection {
+  background: rgba(255, 0, 80, 0.3);
+  color: white;
+}
+
+/* Focus glow effects */
+input:focus, textarea:focus {
+  box-shadow: 0 0 0 3px rgba(0, 245, 212, 0.2), 0 0 20px rgba(0, 245, 212, 0.15);
 }
 
 .text-glow {
