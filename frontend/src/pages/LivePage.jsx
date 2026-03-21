@@ -361,42 +361,36 @@ const StreamViewer = ({ stream, onClose }) => {
           </div>
         </div>
 
-        {/* Right Sidebar - Chat & Gifts */}
-        <div className="w-[400px] flex flex-col flex-shrink-0">
-          <div className="flex-1 flex flex-col rounded-2xl overflow-hidden" style={{ background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            {/* Tabs */}
-            <div className="flex border-b border-white/[0.06] flex-shrink-0">
+        {/* Right: Chat & Gifts Sidebar (30%) - FULL HEIGHT, LARGE TABS */}
+        <div className="w-[30%] flex flex-col p-8 pl-4">
+          <div className="h-full flex flex-col rounded-3xl overflow-hidden" style={{ background: 'rgba(18,18,28,0.98)', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 0 60px rgba(255,0,80,0.1)' }}>
+            
+            {/* Tabs - LARGE, CLEAR, ALWAYS VISIBLE */}
+            <div className="flex border-b border-white/[0.15] bg-black/30 flex-shrink-0">
               <button
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  console.log('Chat tab clicked, setting showGifts to false');
-                  setShowGifts(false); 
-                }}
-                className={`flex-1 py-3 text-sm font-semibold transition-colors font-body ${!showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
+                onClick={() => setShowGifts(false)}
+                className={`flex-1 py-5 text-base font-bold transition-all font-display flex items-center justify-center gap-2 ${!showGifts ? 'text-white bg-[#ff0050]/10 border-b-4 border-[#ff0050]' : 'text-white/40 hover:text-white/70 hover:bg-white/[0.03]'}`}
               >
-                <MessageCircle className="w-4 h-4 inline mr-2" />
+                <MessageCircle className="w-5 h-5" />
                 Chat
               </button>
               <button
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  console.log('Cadouri tab clicked, setting showGifts to true, gifts count:', gifts.length);
-                  setShowGifts(true); 
-                }}
-                className={`flex-1 py-3 text-sm font-semibold transition-colors font-body ${showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
+                onClick={() => setShowGifts(true)}
+                className={`flex-1 py-5 text-base font-bold transition-all font-display flex items-center justify-center gap-2 ${showGifts ? 'text-white bg-[#ff0050]/10 border-b-4 border-[#ff0050]' : 'text-white/40 hover:text-white/70 hover:bg-white/[0.03]'}`}
               >
-                <Gift className="w-4 h-4 inline mr-2" />
+                <Gift className="w-5 h-5" />
                 Cadouri
               </button>
             </div>
 
-          <div className="flex-1 overflow-hidden">
-          {console.log('Rendering panel, showGifts:', showGifts)}
-          {!showGifts ? (
-            <LiveChat streamId={stream.id} />
-          ) : (
-            <GiftPanel gifts={gifts} onSend={sendGift} />
-          )}
+            {/* Content Area */}
+            <div className="flex-1 overflow-hidden">
+              {!showGifts ? (
+                <LiveChat streamId={stream.id} />
+              ) : (
+                <GiftPanel gifts={gifts} onSend={sendGift} />
+              )}
+            </div>
           </div>
         </div>
       </div>
