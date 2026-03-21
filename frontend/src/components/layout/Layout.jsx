@@ -4,13 +4,12 @@ import { motion } from 'framer-motion';
 import {
   Home, Compass, Users, Radio, User, Search, Upload, Bell,
   MessageCircle, Settings, LogOut, BadgeCheck, Plus,
-  ChevronDown, ChevronUp, Sparkles, BarChart3, Moon, Sun, Wallet, Coins
+  ChevronDown, ChevronUp, Sparkles
 } from 'lucide-react';
 import { formatNumber } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
-import { discoverAPI, notificationsAPI, walletAPI } from '../../services/api';
+import { discoverAPI, notificationsAPI } from '../../services/api';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
-import WalletModal from '../WalletModal';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +28,7 @@ const navItems = [
   { path: '/', label: 'For You', icon: Home },
   { path: '/discover', label: 'Discover', icon: Compass },
   { path: '/following', label: 'Following', icon: Users },
-  { path: '/messages', label: 'Messages', icon: MessageCircle },
   { path: '/live', label: 'LIVE', icon: Radio, badge: true },
-  { path: '/analytics', label: 'Analytics', icon: BarChart3 },
   { path: '/profile', label: 'Profile', icon: User },
 ];
 
@@ -57,7 +54,7 @@ const Sidebar = () => {
   const displayedAccounts = showAllSuggested ? suggestedAccounts : suggestedAccounts.slice(0, 3);
 
   const handleNavClick = (path) => {
-    if (path === '/following' || path === '/profile' || path === '/messages' || path === '/analytics') {
+    if (path === '/following' || path === '/profile') {
       requireAuth(() => navigate(path));
     } else {
       navigate(path);
@@ -158,24 +155,16 @@ const Sidebar = () => {
   );
 };
 
-const Header = ({ showWalletModal, setShowWalletModal }) => {
+const Header = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, setShowAuthModal, logout, requireAuth } = useAuth();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState([]);
-  const [walletBalance, setWalletBalance] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated) {
       notificationsAPI.getAll().then(res => setNotifications(res.data || [])).catch(() => {});
-      walletAPI.getBalance().then(res => setWalletBalance(res.data?.balance || 0)).catch(() => {});
-      
-      // Refresh wallet balance every 10s
-      const interval = setInterval(() => {
-        walletAPI.getBalance().then(res => setWalletBalance(res.data?.balance || 0)).catch(() => {});
-      }, 10000);
-      return () => clearInterval(interval);
     }
   }, [isAuthenticated]);
 
@@ -216,26 +205,6 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
-        {isAuthenticated && (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => navigate('/live/studio')}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white"
-                  style={{ background: 'linear-gradient(135deg, #ff0050, #ff3366)' }}
-                >
-                  <Radio className="w-4 h-4" />
-                  Go LIVE
-                </motion.button>
-              </TooltipTrigger>
-              <TooltipContent><p>Pornește un live stream</p></TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-        
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -255,23 +224,6 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
 
         {isAuthenticated ? (
           <>
-            {/* Wallet Balance */}
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div 
-                    onClick={() => setShowWalletModal(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full cursor-pointer hover:bg-white/[0.05] transition-colors" 
-                    style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
-                  >
-                    <Coins className="w-4 h-4 text-[#FFD700]" />
-                    <span className="text-sm font-semibold text-white">{walletBalance}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent><p>Wallet balance</p></TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-
             {/* Notifications */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -312,7 +264,6 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              onClick={() => navigate('/messages')}
               className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/[0.05] transition-colors"
             >
               <MessageCircle className="w-5 h-5 text-white/60" />
