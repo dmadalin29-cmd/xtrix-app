@@ -299,7 +299,7 @@ const StreamViewer = ({ stream, onClose }) => {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center"
+      className="fixed inset-0 z-[60] flex items-center justify-center p-6"
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
@@ -316,14 +316,14 @@ const StreamViewer = ({ stream, onClose }) => {
       </AnimatePresence>
       
       <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
+        initial={{ scale: 0.95, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
+        exit={{ scale: 0.95, opacity: 0 }}
         onClick={e => e.stopPropagation()}
-        className="relative w-full h-full max-w-7xl flex gap-4 p-6"
+        className="relative w-full h-full max-w-[1600px] max-h-[90vh] flex gap-4"
       >
-        {/* Video Player */}
-        <div className="flex-1 flex flex-col">
+        {/* Video Player Container - Takes remaining space */}
+        <div className="flex-1 flex flex-col min-w-0">
           <div className="relative flex-1 rounded-2xl overflow-hidden" style={{ background: 'rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.08)' }}>
             <video ref={videoRef} autoPlay playsInline controls className="w-full h-full object-contain" />
             
@@ -338,7 +338,7 @@ const StreamViewer = ({ stream, onClose }) => {
             </div>
 
             {/* Close Button */}
-            <button onClick={onClose} className="absolute top-4 right-4 w-9 h-9 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors">
+            <button onClick={onClose} className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors z-30">
               <X className="w-5 h-5 text-white" />
             </button>
           </div>
@@ -370,30 +370,43 @@ const StreamViewer = ({ stream, onClose }) => {
         </div>
 
         {/* Right Sidebar - Chat & Gifts */}
-        <div className="w-[380px] flex flex-col rounded-2xl overflow-hidden relative z-10" style={{ background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}>
-          {/* Tabs */}
-          <div className="flex border-b border-white/[0.06] relative z-20">
-            <button
-              onClick={() => setShowGifts(false)}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors font-body ${!showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
-            >
-              <MessageCircle className="w-4 h-4 inline mr-2" />
-              Chat
-            </button>
-            <button
-              onClick={() => setShowGifts(true)}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors font-body ${showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
-            >
-              <Gift className="w-4 h-4 inline mr-2" />
-              Cadouri
-            </button>
-          </div>
+        <div className="w-[400px] flex flex-col flex-shrink-0">
+          <div className="flex-1 flex flex-col rounded-2xl overflow-hidden" style={{ background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}>
+            {/* Tabs */}
+            <div className="flex border-b border-white/[0.06] flex-shrink-0">
+              <button
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  console.log('Chat tab clicked, setting showGifts to false');
+                  setShowGifts(false); 
+                }}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors font-body ${!showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
+              >
+                <MessageCircle className="w-4 h-4 inline mr-2" />
+                Chat
+              </button>
+              <button
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  console.log('Cadouri tab clicked, setting showGifts to true, gifts count:', gifts.length);
+                  setShowGifts(true); 
+                }}
+                className={`flex-1 py-3 text-sm font-semibold transition-colors font-body ${showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
+              >
+                <Gift className="w-4 h-4 inline mr-2" />
+                Cadouri
+              </button>
+            </div>
 
+          <div className="flex-1 overflow-hidden">
+          {console.log('Rendering panel, showGifts:', showGifts)}
           {!showGifts ? (
             <LiveChat streamId={stream.id} />
           ) : (
             <GiftPanel gifts={gifts} onSend={sendGift} />
           )}
+          </div>
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -493,6 +506,8 @@ const GiftPanel = ({ gifts, onSend }) => {
   const { isAuthenticated, user } = useAuth();
   const [selectedGift, setSelectedGift] = useState(null);
 
+  console.log('GiftPanel rendered, gifts count:', gifts?.length || 0);
+
   const handleSend = (gift) => {
     if (!isAuthenticated) {
       alert('Autentifică-te pentru a trimite cadouri!');
@@ -506,34 +521,40 @@ const GiftPanel = ({ gifts, onSend }) => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-4">
+    <div className="flex-1 overflow-y-auto p-4 flex flex-col">
       <div className="mb-4 p-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
-        <p className="text-xs text-white/50 mb-1">Soldul tău:</p>
-        <p className="text-lg font-bold text-white">{user?.walletBalance || 0} <span className="text-sm text-white/40">coins</span></p>
+        <p className="text-xs text-white/50 mb-1 font-body">Soldul tău:</p>
+        <p className="text-lg font-bold text-white font-display">{user?.walletBalance || 0} <span className="text-sm text-white/40 font-body">coins</span></p>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
-        {gifts.map((gift) => (
-          <motion.button
-            key={gift._id}
-            whileHover={{ scale: 1.05, y: -2 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => handleSend(gift)}
-            className="p-3 rounded-xl text-center transition-colors"
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid rgba(255,255,255,0.06)',
-            }}
-          >
-            <div className="text-2xl mb-1">{gift.icon}</div>
-            <p className="text-[10px] text-white/80 font-medium truncate">{gift.name}</p>
-            <p className="text-xs font-bold text-[#00f5d4] mt-1">{gift.cost}</p>
-          </motion.button>
-        ))}
-      </div>
+      {gifts && gifts.length > 0 ? (
+        <div className="grid grid-cols-3 gap-3 flex-1">
+          {gifts.map((gift) => (
+            <motion.button
+              key={gift._id}
+              whileHover={{ scale: 1.05, y: -2 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => handleSend(gift)}
+              className="p-3 rounded-xl text-center transition-colors"
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.06)',
+              }}
+            >
+              <div className="text-2xl mb-1">{gift.icon}</div>
+              <p className="text-[10px] text-white/80 font-medium truncate font-body">{gift.name}</p>
+              <p className="text-xs font-bold text-[#FFD700] mt-1 font-display">{gift.cost}</p>
+            </motion.button>
+          ))}
+        </div>
+      ) : (
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-sm text-white/40 font-body">Se încarcă cadourile...</p>
+        </div>
+      )}
 
       <div className="mt-4 p-3 rounded-xl" style={{ background: 'rgba(255,0,80,0.05)', border: '1px solid rgba(255,0,80,0.2)' }}>
-        <p className="text-xs text-white/50">💡 Cadourile trimise susțin creatorii! Creatorii primesc 70% din valoare.</p>
+        <p className="text-xs text-white/50 font-body">💡 Cadourile trimise susțin creatorii! Creatorii primesc 70% din valoare.</p>
       </div>
     </div>
   );
