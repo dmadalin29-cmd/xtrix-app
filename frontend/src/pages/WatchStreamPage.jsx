@@ -192,6 +192,12 @@ const WatchStreamPage = () => {
 
   const initializePlayer = (hlsUrl) => {
     if (!videoRef.current) return;
+    
+    // Skip if no HLS URL (stream may not be fully started yet)
+    if (!hlsUrl) {
+      console.log('No HLS URL yet, stream may still be initializing');
+      return;
+    }
 
     if (Hls.isSupported()) {
       const hls = new Hls();
@@ -281,6 +287,17 @@ const WatchStreamPage = () => {
           {/* Video Container */}
           <div className="flex-1 rounded-3xl overflow-hidden relative" style={{ background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}>
             <video ref={videoRef} autoPlay playsInline controls className="w-full h-full object-contain" />
+            
+            {/* Placeholder when stream is initializing */}
+            {!stream.hlsUrl && (
+              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900/50 via-pink-900/50 to-black">
+                <div className="text-center">
+                  <Loader2 className="w-16 h-16 text-[#ff0050] animate-spin mx-auto mb-4" />
+                  <p className="text-white/80 text-lg font-body">Stream-ul se pregătește...</p>
+                  <p className="text-white/40 text-sm font-body mt-2">Așteaptă câteva secunde</p>
+                </div>
+              </div>
+            )}
             
             {/* Live Badge */}
             <div className="absolute top-4 left-4 flex items-center gap-2 z-10">

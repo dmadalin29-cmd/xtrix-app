@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { Radio, Users, Eye, Heart, MessageCircle, X, Send, Gift, BadgeCheck } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { liveAPI, giftsAPI } from '../services/api';
@@ -7,6 +8,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import Hls from 'hls.js';
 
 const LivePage = () => {
+  const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
   const [streams, setStreams] = useState([]);
   const [selectedStream, setSelectedStream] = useState(null);
