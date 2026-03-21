@@ -21,18 +21,18 @@ const VideoCard = ({ video, isActive }) => {
   const [muted, setMuted] = useState(true);
   const [showHeart, setShowHeart] = useState(false);
   const [following, setFollowing] = useState(false);
+  const [playerReady, setPlayerReady] = useState(false);
 
   useEffect(() => {
-    if (isActive) {
+    if (isActive && playerReady) {
       setPlaying(true);
-      // Record view
       if (video.id) {
         videosAPI.recordView(video.id).catch(() => {});
       }
-    } else {
+    } else if (!isActive) {
       setPlaying(false);
     }
-  }, [isActive, video.id]);
+  }, [isActive, video.id, playerReady]);
 
   const handleLike = async () => {
     if (!requireAuth()) return;
@@ -86,6 +86,8 @@ const VideoCard = ({ video, isActive }) => {
           muted={muted}
           loop
           style={{ position: 'absolute', top: 0, left: 0 }}
+          onReady={() => setPlayerReady(true)}
+          onError={(e) => { console.warn('Video error:', e); setPlaying(false); }}
           config={{ youtube: { playerVars: { controls: 0, modestbranding: 1, rel: 0, showinfo: 0 } } }}
         />
 

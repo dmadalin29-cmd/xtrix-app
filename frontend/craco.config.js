@@ -61,6 +61,16 @@ let webpackConfig = {
 };
 
 webpackConfig.devServer = (devServerConfig) => {
+  // Disable error overlay for non-critical runtime errors (e.g., video autoplay)
+  devServerConfig.client = {
+    ...devServerConfig.client,
+    overlay: {
+      errors: true,
+      warnings: false,
+      runtimeErrors: false,
+    },
+  };
+
   // Add health check endpoints if enabled
   if (config.enableHealthCheck && setupHealthEndpoints && healthPluginInstance) {
     const originalSetupMiddlewares = devServerConfig.setupMiddlewares;
