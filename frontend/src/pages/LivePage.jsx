@@ -370,19 +370,19 @@ const StreamViewer = ({ stream, onClose }) => {
         </div>
 
         {/* Right Sidebar - Chat & Gifts */}
-        <div className="w-[380px] flex flex-col rounded-2xl overflow-hidden" style={{ background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="w-[380px] flex flex-col rounded-2xl overflow-hidden relative z-10" style={{ background: 'rgba(15,15,25,0.95)', border: '1px solid rgba(255,255,255,0.08)' }}>
           {/* Tabs */}
-          <div className="flex border-b border-white/[0.06]">
+          <div className="flex border-b border-white/[0.06] relative z-20">
             <button
               onClick={() => setShowGifts(false)}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors ${!showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
+              className={`flex-1 py-3 text-sm font-semibold transition-colors font-body ${!showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
             >
               <MessageCircle className="w-4 h-4 inline mr-2" />
               Chat
             </button>
             <button
               onClick={() => setShowGifts(true)}
-              className={`flex-1 py-3 text-sm font-semibold transition-colors ${showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
+              className={`flex-1 py-3 text-sm font-semibold transition-colors font-body ${showGifts ? 'text-white border-b-2 border-[#ff0050]' : 'text-white/40'}`}
             >
               <Gift className="w-4 h-4 inline mr-2" />
               Cadouri
