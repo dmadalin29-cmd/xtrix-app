@@ -121,10 +121,10 @@ const ProfilePage = () => {
             </div>
             <div className="flex-1 pb-2">
               <div className="flex items-center gap-3 mb-1">
-                <h1 className="text-2xl font-bold text-white">{profileUser.displayName}</h1>
+                <h1 className="text-2xl font-bold text-white font-display">{profileUser.displayName}</h1>
                 {profileUser.verified && <BadgeCheck className="w-5 h-5 text-[#00f5d4]" />}
               </div>
-              <p className="text-sm text-white/50">@{profileUser.username}</p>
+              <p className="text-sm text-white/50 font-body">@{profileUser.username}</p>
             </div>
             <div className="flex items-center gap-3 pb-2">
               {isOwnProfile ? (
@@ -153,14 +153,14 @@ const ProfilePage = () => {
               { label: 'Likes', value: profileUser.likes || 0 },
             ].map((stat) => (
               <div key={stat.label} className="text-center">
-                <p className="text-xl font-bold text-white">{formatNumber(stat.value)}</p>
-                <p className="text-xs text-white/40 mt-0.5">{stat.label}</p>
+                <p className="text-xl font-bold text-white font-display">{formatNumber(stat.value)}</p>
+                <p className="text-xs text-white/40 mt-0.5 font-body">{stat.label}</p>
               </div>
             ))}
           </div>
 
           {/* Bio */}
-          <p className="text-sm text-white/70 mt-4 max-w-md leading-relaxed">{profileUser.bio || 'No bio yet'}</p>
+          <p className="text-sm text-white/70 mt-4 max-w-md leading-relaxed font-body">{profileUser.bio || 'No bio yet'}</p>
           <div className="flex items-center gap-4 mt-3">
             <span className="flex items-center gap-1.5 text-xs text-white/30">
               <Link className="w-3.5 h-3.5" /> kdm.com/@{profileUser.username}

@@ -148,22 +148,22 @@ const VideoCard = ({ video, isActive }) => {
             </Avatar>
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold text-white">{video.user?.username}</span>
-                {video.user?.verified && <BadgeCheck className="w-3.5 h-3.5 text-[#00f5d4]" />}
+                <span className="text-sm font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-body">{video.user?.username}</span>
+                {video.user?.verified && <BadgeCheck className="w-3.5 h-3.5 text-[#00f5d4] drop-shadow-md" />}
               </div>
-              <span className="text-[11px] text-white/50">{video.createdAt}</span>
+              <span className="text-[11px] text-white/50 drop-shadow-md font-body">{video.createdAt}</span>
             </div>
             {!following && (
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={(e) => { e.stopPropagation(); setFollowing(true); }} className="ml-3 px-4 py-1.5 rounded-full text-xs font-bold text-white border border-[#ff0050] hover:bg-[#ff0050]/20 transition-colors">
+              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={(e) => { e.stopPropagation(); setFollowing(true); }} className="ml-3 px-4 py-1.5 rounded-full text-xs font-bold text-white border border-[#ff0050] hover:bg-[#ff0050]/20 transition-colors drop-shadow-lg font-body">
                 Follow
               </motion.button>
             )}
           </div>
-          <p className="text-sm text-white/90 leading-relaxed mb-3 line-clamp-2">{video.description}</p>
+          <p className="text-sm text-white/90 leading-relaxed mb-3 line-clamp-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-body">{video.description}</p>
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
               <Music className="w-3.5 h-3.5 text-white/70" />
-              <span className="text-xs text-white/70 max-w-[180px] truncate">{video.music || 'Original Sound'}</span>
+              <span className="text-xs text-white/70 max-w-[180px] truncate drop-shadow-md font-body">{video.music || 'Original Sound'}</span>
             </div>
           </div>
         </div>

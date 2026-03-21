@@ -88,9 +88,9 @@ const MessagesPage = () => {
     return (
       <div className="flex flex-col items-center justify-center h-full py-20">
         <MessageCircle className="w-16 h-16 text-white/20 mb-4" />
-        <h2 className="text-xl font-bold text-white mb-2">Sign in to message</h2>
-        <p className="text-sm text-white/40 mb-6">Connect with friends and creators</p>
-        <motion.button whileHover={{ scale: 1.05 }} onClick={() => requireAuth()} className="px-8 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#ff0050' }}>Sign In</motion.button>
+        <h2 className="text-2xl font-bold text-white mb-2 font-display">Sign in to message</h2>
+        <p className="text-sm text-white/40 mb-6 font-body">Connect with friends and creators</p>
+        <motion.button whileHover={{ scale: 1.05 }} onClick={() => requireAuth()} className="px-8 py-3 rounded-xl text-sm font-bold text-white font-body" style={{ background: '#ff0050' }}>Sign In</motion.button>
       </div>
     );
   }

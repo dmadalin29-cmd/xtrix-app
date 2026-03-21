@@ -115,14 +115,14 @@ const DiscoverPage = ({ live }) => {
     return (
       <div className="p-6 max-w-[1400px] mx-auto">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-1">Search: "{searchQuery}"</h1>
-          <p className="text-sm text-white/40">
+          <h1 className="text-3xl font-bold text-white mb-1 font-display">Search: "{searchQuery}"</h1>
+          <p className="text-sm text-white/40 font-body">
             {(searchResults.users?.length || 0) + (searchResults.videos?.length || 0)} results found
           </p>
         </motion.div>
         {searchResults.users?.length > 0 && (
           <div className="mb-8">
-            <h2 className="text-lg font-bold text-white mb-4">Users</h2>
+            <h2 className="text-xl font-bold text-white mb-4 font-display">Users</h2>
             <div className="flex gap-4 flex-wrap">
               {searchResults.users.map((user) => (
                 <motion.div key={user.id} whileHover={{ y: -4 }} onClick={() => navigate(`/profile/${user.username}`)} className="p-4 rounded-2xl cursor-pointer w-[140px] text-center" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -130,8 +130,8 @@ const DiscoverPage = ({ live }) => {
                     <AvatarImage src={user.avatar} />
                     <AvatarFallback>{(user.displayName || 'U')[0]}</AvatarFallback>
                   </Avatar>
-                  <p className="text-sm font-semibold text-white truncate">{user.username}</p>
-                  <p className="text-xs text-white/40">{formatNumber(user.followers || 0)} fans</p>
+                  <p className="text-sm font-semibold text-white truncate font-body">{user.username}</p>
+                  <p className="text-xs text-white/40 font-body">{formatNumber(user.followers || 0)} fans</p>
                 </motion.div>
               ))}
             </div>
@@ -139,7 +139,7 @@ const DiscoverPage = ({ live }) => {
         )}
         {searchResults.videos?.length > 0 && (
           <div>
-            <h2 className="text-lg font-bold text-white mb-4">Videos</h2>
+            <h2 className="text-xl font-bold text-white mb-4 font-display">Videos</h2>
             <VideoGrid videoList={searchResults.videos} />
           </div>
         )}
@@ -156,7 +156,7 @@ const DiscoverPage = ({ live }) => {
   return (
     <div className="p-6 max-w-[1400px] mx-auto">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-1">{live ? 'LIVE Now' : 'Discover'}</h1>
+        <h1 className="text-3xl font-bold text-white mb-1 font-display">{live ? 'LIVE Now' : 'Discover'}</h1>
         <p className="text-sm text-white/40">{live ? 'Watch live streams from creators' : 'Explore trending content and discover new creators'}</p>
       </motion.div>
 
@@ -165,7 +165,7 @@ const DiscoverPage = ({ live }) => {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-5 h-5 text-[#ff0050]" />
-            <h2 className="text-lg font-bold text-white">Trending Now</h2>
+            <h2 className="text-lg font-bold text-white font-display">Trending Now</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
             {trendingHashtags.map((hashtag, i) => {
@@ -175,8 +175,8 @@ const DiscoverPage = ({ live }) => {
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: `rgba(255,0,80,${0.08 + i * 0.02})` }}>
                     <Icon className="w-5 h-5 text-[#ff0050]" />
                   </div>
-                  <p className="text-sm font-bold text-white">#{hashtag.tag}</p>
-                  <p className="text-xs text-white/40 mt-0.5">{hashtag.posts} views</p>
+                  <p className="text-sm font-bold text-white font-body">#{hashtag.tag}</p>
+                  <p className="text-xs text-white/40 mt-0.5 font-body">{hashtag.posts} views</p>
                 </motion.div>
               );
             })}
@@ -198,7 +198,7 @@ const DiscoverPage = ({ live }) => {
       {/* Creators */}
       {!live && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="mb-8">
-          <h2 className="text-lg font-bold text-white mb-4">Popular Creators</h2>
+          <h2 className="text-xl font-bold text-white mb-4 font-display">Popular Creators</h2>
           <div className="flex gap-4 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
             {creators.map((user, i) => (
               <motion.div key={user.id} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: i * 0.06 }} whileHover={{ y: -6 }} className="flex-shrink-0 w-[140px] p-4 rounded-2xl text-center cursor-pointer" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} onClick={() => navigate(`/profile/${user.username}`)}>
@@ -226,7 +226,7 @@ const DiscoverPage = ({ live }) => {
 
       {/* Video Grid */}
       <div>
-        <h2 className="text-lg font-bold text-white mb-4">{live ? 'Live Streams' : 'Explore Videos'}</h2>
+        <h2 className="text-lg font-bold text-white mb-4 font-display">{live ? 'Live Streams' : 'Explore Videos'}</h2>
         <VideoGrid videoList={trendingVideos.length > 0 ? trendingVideos : [...mockVideos, ...mockVideos.slice(0, 4)]} />
       </div>
     </div>

@@ -34,13 +34,13 @@ const LivePage = () => {
     <div className="p-6 max-w-[1400px] mx-auto">
       <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
         <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-3xl font-bold text-white">LIVE</h1>
-          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white" style={{ background: '#ff0050' }}>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight font-display">LIVE</h1>
+          <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white font-body" style={{ background: '#ff0050' }}>
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
             {streams.length} Live Acum
           </span>
         </div>
-        <p className="text-sm text-white/40">Urmărește live stream-uri de la creatorii tăi preferați</p>
+        <p className="text-base sm:text-lg text-white/40 font-body">Urmărește live stream-uri de la creatorii tăi preferați</p>
       </motion.div>
 
       {/* Live Stream Grid */}
@@ -109,6 +109,91 @@ const LivePage = () => {
   );
 };
 
+// Flying Gift Animation Component
+const FlyingGift = ({ gift, onComplete }) => {
+  const startX = Math.random() * 60 + 20; // 20-80% from left
+  const startY = Math.random() * 40 + 30; // 30-70% from top
+  
+  return (
+    <motion.div
+      initial={{ 
+        x: `${startX}vw`, 
+        y: `${startY}vh`, 
+        scale: 0, 
+        opacity: 0,
+        rotate: 0 
+      }}
+      animate={{ 
+        x: [`${startX}vw`, `${startX + 20}vw`, `${startX - 10}vw`],
+        y: [`${startY}vh`, `${startY - 40}vh`, `${startY - 60}vh`],
+        scale: [0, 2.5, 3, 2],
+        opacity: [0, 1, 1, 0],
+        rotate: [0, 15, -10, 0]
+      }}
+      transition={{ 
+        duration: 2.5,
+        times: [0, 0.3, 0.7, 1],
+        ease: "easeOut"
+      }}
+      onAnimationComplete={onComplete}
+      className="fixed pointer-events-none z-[200]"
+      style={{
+        filter: 'drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))',
+      }}
+    >
+      <div className="relative">
+        <div className="text-7xl">{gift.icon}</div>
+        {/* Glow effect */}
+        <div className="absolute inset-0 blur-2xl opacity-70" style={{ background: 'radial-gradient(circle, rgba(255,215,0,0.6), transparent)' }} />
+        {/* Sparkles */}
+        <motion.div
+          animate={{ 
+            scale: [1, 1.5, 1],
+            opacity: [0.8, 0.3, 0.8]
+          }}
+          transition={{ 
+            duration: 0.8,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
+          className="absolute -top-4 -right-4 text-3xl"
+        >
+          ✨
+        </motion.div>
+        <motion.div
+          animate={{ 
+            scale: [1, 1.3, 1],
+            opacity: [0.8, 0.4, 0.8]
+          }}
+          transition={{ 
+            duration: 1,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 0.3
+          }}
+          className="absolute -bottom-4 -left-4 text-2xl"
+        >
+          ✨
+        </motion.div>
+      </div>
+      {/* Gift name and cost floating */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: [0, 1, 1, 0], y: [10, 0, -5, -10] }}
+        transition={{ duration: 2.5 }}
+        className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center whitespace-nowrap"
+      >
+        <p className="text-xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]">
+          {gift.name}
+        </p>
+        <p className="text-sm font-semibold text-[#FFD700] drop-shadow-[0_0_6px_rgba(255,215,0,0.6)]">
+          {gift.cost} coins
+        </p>
+      </motion.div>
+    </motion.div>
+  );
+};
+
 // Stream Viewer Component with HLS Player
 const StreamViewer = ({ stream, onClose }) => {
   const { isAuthenticated, user, requireAuth } = useAuth();
@@ -119,6 +204,7 @@ const StreamViewer = ({ stream, onClose }) => {
   const [showGifts, setShowGifts] = useState(false);
   const [gifts, setGifts] = useState([]);
   const [currentViewers, setCurrentViewers] = useState(stream.viewers);
+  const [flyingGifts, setFlyingGifts] = useState([]);
 
   useEffect(() => {
     // Join stream
@@ -187,7 +273,15 @@ const StreamViewer = ({ stream, onClose }) => {
       try {
         await giftsAPI.send(stream.user.id, gift._id, stream.id);
         setShowGifts(false);
-        // Show animation (todo)
+        
+        // Trigger flying animation
+        const giftId = Date.now() + Math.random();
+        setFlyingGifts(prev => [...prev, { ...gift, animationId: giftId }]);
+        
+        // Remove after animation completes
+        setTimeout(() => {
+          setFlyingGifts(prev => prev.filter(g => g.animationId !== giftId));
+        }, 2600);
       } catch (err) {
         alert(err.response?.data?.detail || 'Eroare la trimiterea cadoului');
       }
@@ -209,6 +303,17 @@ const StreamViewer = ({ stream, onClose }) => {
       onClick={onClose}
     >
       <div className="absolute inset-0 bg-black/90 backdrop-blur-sm" />
+      
+      {/* Flying Gifts Animations */}
+      <AnimatePresence>
+        {flyingGifts.map((gift) => (
+          <FlyingGift
+            key={gift.animationId}
+            gift={gift}
+            onComplete={() => {}}
+          />
+        ))}
+      </AnimatePresence>
       
       <motion.div
         initial={{ scale: 0.9, opacity: 0 }}
