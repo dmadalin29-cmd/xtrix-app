@@ -1,15 +1,11 @@
-from fastapi import FastAPI, APIRouter
+from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import logging
 from pathlib import Path
-from pydantic import BaseModel, Field, ConfigDict
-from typing import List
-import uuid
-from datetime import datetime, timezone
-
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -17,62 +13,16 @@ load_dotenv(ROOT_DIR / '.env')
 # MongoDB connection
 mongo_url = os.environ['MONGO_URL']
 client = AsyncIOMotorClient(mongo_url)
-db = client[os.environ['DB_NAME']]
+db = client[os.environ.get('DB_NAME', 'kdm_db')]
 
-# Create the main app without a prefix
-app = FastAPI()
+# Create app
+app = FastAPI(title="KdM API")
 
-# Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
-
-
-# Define Models
-class StatusCheck(BaseModel):
-    model_config = ConfigDict(extra="ignore")  # Ignore MongoDB's _id field
-    
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-class StatusCheckCreate(BaseModel):
-    client_name: str
-
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.model_dump()
-    status_obj = StatusCheck(**status_dict)
-    
-    # Convert to dict and serialize datetime to ISO string for MongoDB
-    doc = status_obj.model_dump()
-    doc['timestamp'] = doc['timestamp'].isoformat()
-    
-    _ = await db.status_checks.insert_one(doc)
-    return status_obj
-
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    # Exclude MongoDB's _id field from the query results
-    status_checks = await db.status_checks.find({}, {"_id": 0}).to_list(1000)
-    
-    # Convert ISO string timestamps back to datetime objects
-    for check in status_checks:
-        if isinstance(check['timestamp'], str):
-            check['timestamp'] = datetime.fromisoformat(check['timestamp'])
-    
-    return status_checks
-
-# Include the router in the main app
-app.include_router(api_router)
-
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -83,6 +33,56 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Import and register routes
+from routes.auth import router as auth_router, set_db as auth_set_db
+from routes.users import router as users_router, set_db as users_set_db
+from routes.videos import router as videos_router, set_db as videos_set_db
+from routes.discover import router as discover_router, set_db as discover_set_db
+
+# Set DB references
+auth_set_db(db)
+users_set_db(db)
+videos_set_db(db)
+discover_set_db(db)
+
+# Include routers
+app.include_router(auth_router)
+app.include_router(users_router)
+app.include_router(videos_router)
+app.include_router(discover_router)
+
+# Serve uploaded files
+UPLOAD_DIR = os.path.join(ROOT_DIR, "uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/api/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+# Health check
+@app.get("/api/")
+async def root():
+    return {"message": "KdM API is running"}
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok"}
+
+
+@app.on_event("startup")
+async def startup():
+    # Create indexes
+    await db.users.create_index("username", unique=True)
+    await db.users.create_index("email", unique=True)
+    await db.videos.create_index([("createdAt", -1)])
+    await db.videos.create_index("userId")
+    await db.videos.create_index("hashtags")
+    await db.likes.create_index([("userId", 1), ("videoId", 1)], unique=True)
+    await db.bookmarks.create_index([("userId", 1), ("videoId", 1)], unique=True)
+    await db.follows.create_index([("followerId", 1), ("followingId", 1)], unique=True)
+    await db.comments.create_index("videoId")
+    await db.notifications.create_index([("userId", 1), ("createdAt", -1)])
+    await db.hashtags.create_index("tag", unique=True)
+    logger.info("KdM API started - indexes created")
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
