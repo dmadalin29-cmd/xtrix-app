@@ -14,6 +14,7 @@ const HashtagPage = lazy(() => import('./pages/HashtagPage'));
 const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const LivePage = lazy(() => import('./pages/LivePage'));
 const GoLiveStudio = lazy(() => import('./pages/GoLiveStudio'));
+const WatchStreamPage = lazy(() => import('./pages/WatchStreamPage'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-full">
@@ -30,23 +31,40 @@ function App() {
       <BrowserRouter>
         <AuthProvider>
           <AuthModal />
-          <Layout>
-            <Suspense fallback={<LoadingFallback />}>
-              <Routes>
-                <Route path="/" element={<FeedPage />} />
-                <Route path="/discover" element={<DiscoverPage />} />
-                <Route path="/following" element={<FeedPage following />} />
-                <Route path="/live" element={<LivePage />} />
-                <Route path="/live/studio" element={<GoLiveStudio />} />
-                <Route path="/profile" element={<ProfilePage />} />
-                <Route path="/profile/:username" element={<ProfilePage />} />
-                <Route path="/upload" element={<UploadPage />} />
-                <Route path="/messages" element={<MessagesPage />} />
-                <Route path="/hashtag/:tag" element={<HashtagPage />} />
-                <Route path="/analytics" element={<AnalyticsPage />} />
-              </Routes>
-            </Suspense>
-          </Layout>
+          
+          <Routes>
+            {/* Full Screen Pages (NO Layout/Sidebar) */}
+            <Route path="/watch/:streamId" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <WatchStreamPage />
+              </Suspense>
+            } />
+            <Route path="/golive" element={
+              <Suspense fallback={<LoadingFallback />}>
+                <GoLiveStudio />
+              </Suspense>
+            } />
+
+            {/* Regular Pages (WITH Layout/Sidebar) */}
+            <Route path="*" element={
+              <Layout>
+                <Suspense fallback={<LoadingFallback />}>
+                  <Routes>
+                    <Route path="/" element={<FeedPage />} />
+                    <Route path="/discover" element={<DiscoverPage />} />
+                    <Route path="/following" element={<FeedPage following />} />
+                    <Route path="/live" element={<LivePage />} />
+                    <Route path="/profile" element={<ProfilePage />} />
+                    <Route path="/profile/:username" element={<ProfilePage />} />
+                    <Route path="/upload" element={<UploadPage />} />
+                    <Route path="/messages" element={<MessagesPage />} />
+                    <Route path="/hashtag/:tag" element={<HashtagPage />} />
+                    <Route path="/analytics" element={<AnalyticsPage />} />
+                  </Routes>
+                </Suspense>
+              </Layout>
+            } />
+          </Routes>
         </AuthProvider>
       </BrowserRouter>
     </div>
