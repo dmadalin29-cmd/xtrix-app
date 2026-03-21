@@ -22,16 +22,35 @@ const VideoCard = ({ video, isActive }) => {
   const [showHeart, setShowHeart] = useState(false);
   const [following, setFollowing] = useState(false);
   const [playerReady, setPlayerReady] = useState(false);
+  const playTimeoutRef = useRef(null);
 
   useEffect(() => {
+    // Clear any pending play timeout on cleanup or state change
+    if (playTimeoutRef.current) {
+      clearTimeout(playTimeoutRef.current);
+      playTimeoutRef.current = null;
+    }
+
+    if (!isActive) {
+      setPlaying(false);
+      return;
+    }
+
+    // Only autoplay if player is ready, with a small delay to prevent race condition
     if (isActive && playerReady) {
-      setPlaying(true);
+      playTimeoutRef.current = setTimeout(() => {
+        setPlaying(true);
+      }, 300);
       if (video.id) {
         videosAPI.recordView(video.id).catch(() => {});
       }
-    } else if (!isActive) {
-      setPlaying(false);
     }
+
+    return () => {
+      if (playTimeoutRef.current) {
+        clearTimeout(playTimeoutRef.current);
+      }
+    };
   }, [isActive, video.id, playerReady]);
 
   const handleLike = async () => {
@@ -76,7 +95,7 @@ const VideoCard = ({ video, isActive }) => {
   return (
     <div className="snap-item flex items-center justify-center gap-5 py-4 px-8" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Video Container */}
-      <div className="relative h-full aspect-[9/16] max-h-[calc(100vh-96px)] rounded-2xl overflow-hidden group cursor-pointer" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }} onDoubleClick={handleDoubleClick} onClick={() => setPlaying(!playing)}>
+      <div className="relative h-full aspect-[9/16] max-h-[calc(100vh-96px)] rounded-2xl overflow-hidden group cursor-pointer" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }} onDoubleClick={handleDoubleClick} onClick={() => { if (playTimeoutRef.current) { clearTimeout(playTimeoutRef.current); } setPlaying(p => !p); }}>
         {/* Video Player */}
         <ReactPlayer
           url={video.videoUrl}

@@ -107,4 +107,19 @@ if (isDevServer) {
   }
 }
 
+// IMPORTANT: Apply overlay override AFTER visual edits to ensure it sticks
+const originalDevServer = webpackConfig.devServer;
+webpackConfig.devServer = (devServerConfig) => {
+  // Call the original devServer function first
+  if (typeof originalDevServer === 'function') {
+    devServerConfig = originalDevServer(devServerConfig);
+  }
+  // Force disable runtime error overlay (video autoplay errors)
+  devServerConfig.client = {
+    ...devServerConfig.client,
+    overlay: false,
+  };
+  return devServerConfig;
+};
+
 module.exports = webpackConfig;
