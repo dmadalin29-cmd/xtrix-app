@@ -158,27 +158,29 @@ const Sidebar = () => {
   );
 };
 
-const Header = () => {
+const Header = ({ showWalletModal, setShowWalletModal }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, setShowAuthModal, logout, requireAuth } = useAuth();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState([]);
   const [walletBalance, setWalletBalance] = useState(0);
-  const [showWalletModal, setShowWalletModal] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
       notificationsAPI.getAll().then(res => setNotifications(res.data || [])).catch(() => {});
       walletAPI.getBalance().then(res => setWalletBalance(res.data?.balance || 0)).catch(() => {});
+      
+      // Refresh wallet balance every 10s
+      const interval = setInterval(() => {
+        walletAPI.getBalance().then(res => setWalletBalance(res.data?.balance || 0)).catch(() => {});
+      }, 10000);
+      return () => clearInterval(interval);
     }
   }, [isAuthenticated]);
 
   return (
     <header className="fixed top-0 left-[280px] right-0 h-16 z-50 flex items-center justify-between px-6" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(30px)' }}>
-      {/* Wallet Modal */}
-      {showWalletModal && <WalletModal isOpen={showWalletModal} onClose={() => setShowWalletModal(false)} user={user} />}
-      
       {/* Search */}
       <div className="flex-1 max-w-[460px]">
         <motion.div
