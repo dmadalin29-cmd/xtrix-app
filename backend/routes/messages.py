@@ -56,24 +56,46 @@ async def get_conversations(user_id: str = Depends(get_current_user)):
         "participants": user_id
     }).sort("updatedAt", -1).to_list(50)
 
+    # Batch fetch all users in one query (N+1 fix)
+    other_user_ids = []
+    for convo in convos:
+        other_id = [p for p in convo["participants"] if p != user_id]
+        if other_id:
+            other_user_ids.append(other_id[0])
+    
+    users_list = await db.users.find({"_id": {"$in": other_user_ids}}, {"_id": 0}).to_list(len(other_user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
+    # Batch fetch unread counts using aggregation (N+1 fix)
+    convo_ids = [c["_id"] for c in convos]
+    unread_pipeline = [
+        {"$match": {
+            "conversationId": {"$in": convo_ids},
+            "senderId": {"$ne": user_id},
+            "read": False
+        }},
+        {"$group": {
+            "_id": "$conversationId",
+            "count": {"$sum": 1}
+        }}
+    ]
+    unread_results = await db.messages.aggregate(unread_pipeline).to_list(len(convo_ids))
+    unread_map = {u["_id"]: u["count"] for u in unread_results}
+
     result = []
     for convo in convos:
         # Get the other participant
         other_id = [p for p in convo["participants"] if p != user_id]
-        other_user = None
+        other_user_data = {}
         if other_id:
-            other_user = await db.users.find_one({"_id": other_id[0]})
+            other_user_data = user_map.get(other_id[0], {})
 
-        # Get unread count
-        unread = await db.messages.count_documents({
-            "conversationId": convo["_id"],
-            "senderId": {"$ne": user_id},
-            "read": False
-        })
+        # Get unread count from map
+        unread = unread_map.get(convo["_id"], 0)
 
         result.append({
             "id": convo["_id"],
-            "user": user_doc_to_dict(other_user),
+            "user": other_user_data,
             "lastMessage": convo.get("lastMessage", ""),
             "lastMessageTime": time_ago(convo.get("updatedAt", "")),
             "unread": unread,
@@ -155,12 +177,18 @@ async def get_messages(
         {"$set": {"read": True}}
     )
 
+    # Batch fetch all senders in one query (N+1 fix)
+    sender_ids = list(set([msg["senderId"] for msg in messages]))
+    users_list = await db.users.find({"_id": {"$in": sender_ids}}, {"_id": 0}).to_list(len(sender_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+
     result = []
     for msg in reversed(messages):
-        sender = await db.users.find_one({"_id": msg["senderId"]})
+        sender_id = msg["senderId"]
+        sender_data = user_map.get(sender_id, {})
         result.append({
             "id": msg["_id"],
-            "sender": user_doc_to_dict(sender),
+            "sender": sender_data,
             "text": msg.get("text", ""),
             "time": time_ago(msg.get("createdAt", "")),
             "isOwn": msg["senderId"] == user_id,
@@ -207,7 +235,7 @@ async def send_message(
             "userId": other_id[0],
             "fromUserId": user_id,
             "type": "message",
-            "text": f"sent you a message",
+            "text": "sent you a message",
             "read": False,
             "createdAt": datetime.utcnow().isoformat(),
         })

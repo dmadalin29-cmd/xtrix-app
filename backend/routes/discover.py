@@ -136,12 +136,19 @@ async def get_trending():
     ]
     
     trending_videos = await db.videos.aggregate(pipeline).to_list(12)
+    
+    # Batch fetch all users in one query (N+1 fix)
+    user_ids = [doc.get("userId") for doc in trending_videos if doc.get("userId")]
+    users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     videos = []
     for doc in trending_videos:
-        user = await db.users.find_one({"_id": doc.get("userId", "")})
+        user_id = doc.get("userId", "")
+        user_data = user_map.get(user_id, {})
         videos.append({
             "id": doc["_id"],
-            "user": user_doc_to_response(user).dict() if user else {},
+            "user": user_data,
             "description": doc.get("caption", ""),
             "music": doc.get("music", "Original Sound"),
             "likes": doc.get("likes", 0),
@@ -160,8 +167,13 @@ async def get_trending():
 
 @router.get("/discover/creators")
 async def get_creators(limit: int = Query(10, le=30)):
-    creators = await db.users.find().sort("followers", -1).limit(limit).to_list(limit)
-    return [user_doc_to_response(c).dict() for c in creators]
+    # Add projection to fetch only required fields
+    creators = await db.users.find(
+        {},
+        {"_id": 0, "id": 1, "username": 1, "email": 1, "displayName": 1, "avatar": 1, 
+         "bio": 1, "followers": 1, "following": 1, "likes": 1, "verified": 1, "createdAt": 1}
+    ).sort("followers", -1).limit(limit).to_list(limit)
+    return creators
 
 
 @router.get("/hashtag/{tag}")
@@ -170,12 +182,19 @@ async def get_hashtag_videos(tag: str, page: int = Query(1, ge=1), limit: int = 
     skip = (page - 1) * limit
     total = await db.videos.count_documents({"hashtags": tag, "visibility": "public"})
     docs = await db.videos.find({"hashtags": tag, "visibility": "public"}).sort("likes", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Batch fetch all users in one query (N+1 fix)
+    user_ids = [doc.get("userId") for doc in docs if doc.get("userId")]
+    users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     videos = []
     for doc in docs:
-        user = await db.users.find_one({"_id": doc.get("userId", "")})
+        user_id = doc.get("userId", "")
+        user_data = user_map.get(user_id, {})
         videos.append({
             "id": doc["_id"],
-            "user": user_doc_to_response(user).dict() if user else {},
+            "user": user_data,
             "description": doc.get("caption", ""),
             "music": doc.get("music", "Original Sound"),
             "likes": doc.get("likes", 0),
@@ -227,11 +246,11 @@ async def get_analytics(user_id: str = Depends(get_current_user)):
 
     # Recent followers
     recent_follows = await db.follows.find({"followingId": user_id}).sort("createdAt", -1).limit(5).to_list(5)
-    recent_followers = []
-    for f in recent_follows:
-        fu = await db.users.find_one({"_id": f["followerId"]})
-        if fu:
-            recent_followers.append(user_doc_to_response(fu).dict())
+    
+    # Batch fetch all follower users in one query (N+1 fix)
+    follower_ids = [f["followerId"] for f in recent_follows]
+    users_list = await db.users.find({"_id": {"$in": follower_ids}}, {"_id": 0}).to_list(len(follower_ids))
+    recent_followers = users_list
 
     return {
         "totalVideos": total_videos,
@@ -255,8 +274,10 @@ async def search(q: str = Query("", min_length=1), type: str = Query("all")):
                 {"username": {"$regex": q, "$options": "i"}},
                 {"displayName": {"$regex": q, "$options": "i"}}
             ]
-        }).limit(20).to_list(20)
-        results["users"] = [user_doc_to_response(u).dict() for u in users]
+        }, {"_id": 0, "id": 1, "username": 1, "email": 1, "displayName": 1, "avatar": 1, 
+            "bio": 1, "followers": 1, "following": 1, "likes": 1, "verified": 1, "createdAt": 1}
+        ).limit(20).to_list(20)
+        results["users"] = users
 
     if type in ("all", "videos"):
         vids = await db.videos.find({
@@ -266,11 +287,18 @@ async def search(q: str = Query("", min_length=1), type: str = Query("all")):
             ],
             "visibility": "public"
         }).sort("createdAt", -1).limit(20).to_list(20)
+        
+        # Batch fetch all users in one query (N+1 fix)
+        user_ids = [doc.get("userId") for doc in vids if doc.get("userId")]
+        users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+        user_map = {u.get("id", ""): u for u in users_list}
+        
         for doc in vids:
-            user = await db.users.find_one({"_id": doc.get("userId", "")})
+            user_id = doc.get("userId", "")
+            user_data = user_map.get(user_id, {})
             results["videos"].append({
                 "id": doc["_id"],
-                "user": user_doc_to_response(user).dict() if user else {},
+                "user": user_data,
                 "description": doc.get("caption", ""),
                 "likes": doc.get("likes", 0),
                 "comments": doc.get("commentCount", 0),
@@ -286,13 +314,20 @@ async def search(q: str = Query("", min_length=1), type: str = Query("all")):
 @router.get("/notifications")
 async def get_notifications(user_id: str = Depends(get_current_user)):
     docs = await db.notifications.find({"userId": user_id}).sort("createdAt", -1).limit(30).to_list(30)
+    
+    # Batch fetch all users in one query (N+1 fix)
+    from_user_ids = [doc.get("fromUserId") for doc in docs if doc.get("fromUserId")]
+    users_list = await db.users.find({"_id": {"$in": from_user_ids}}, {"_id": 0}).to_list(len(from_user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     notifications = []
     for doc in docs:
-        from_user = await db.users.find_one({"_id": doc.get("fromUserId", "")})
+        from_user_id = doc.get("fromUserId", "")
+        user_data = user_map.get(from_user_id, {})
         notifications.append({
             "id": doc["_id"],
             "type": doc.get("type", ""),
-            "user": user_doc_to_response(from_user).dict() if from_user else {},
+            "user": user_data,
             "text": doc.get("text", ""),
             "time": time_ago(doc.get("createdAt", "")),
         })

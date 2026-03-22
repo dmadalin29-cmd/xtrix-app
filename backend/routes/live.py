@@ -147,12 +147,19 @@ async def end_live(stream_id: str, user_id: str = Depends(get_current_user)):
 async def get_active_streams():
     """Get all active live streams"""
     streams = await db.livestreams.find({"active": True}).sort("viewers", -1).to_list(50)
+    
+    # Batch fetch all users in one query (N+1 fix)
+    user_ids = [s["userId"] for s in streams if s.get("userId")]
+    users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     result = []
     for s in streams:
-        user = await db.users.find_one({"_id": s["userId"]})
+        user_id = s.get("userId", "")
+        user_data = user_map.get(user_id, {})
         result.append({
             "id": s["_id"],
-            "user": user_doc_to_dict(user),
+            "user": user_data,
             "title": s.get("title", ""),
             "category": s.get("category", ""),
             "viewers": s.get("viewers", 0),
@@ -227,12 +234,19 @@ async def get_chat(stream_id: str, after: str = Query("")):
     if after:
         query["createdAt"] = {"$gt": after}
     messages = await db.live_chat.find(query).sort("createdAt", 1).limit(100).to_list(100)
+    
+    # Batch fetch all users in one query (N+1 fix)
+    user_ids = list(set([msg["userId"] for msg in messages if msg.get("userId")]))
+    users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     result = []
     for msg in messages:
-        user = await db.users.find_one({"_id": msg["userId"]})
+        user_id = msg.get("userId", "")
+        user_data = user_map.get(user_id, {})
         result.append({
             "id": msg["_id"],
-            "user": user_doc_to_dict(user),
+            "user": user_data,
             "text": msg.get("text", ""),
             "time": time_ago(msg.get("createdAt", "")),
             "createdAt": msg.get("createdAt", ""),
