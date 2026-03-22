@@ -124,7 +124,6 @@ async def toggle_follow(target_id: str, user_id: str = Depends(get_current_user)
         await db.users.update_one({"_id": user_id}, {"$inc": {"following": 1}})
         # Create notification
         import uuid as uuid_mod
-        follower = await db.users.find_one({"_id": user_id})
         await db.notifications.insert_one({
             "_id": str(uuid_mod.uuid4()),
             "userId": target_id,

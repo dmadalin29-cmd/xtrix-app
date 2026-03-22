@@ -90,7 +90,7 @@ async def get_me(user_id: str = Depends(get_current_user)):
     # Convert string ID back to ObjectId for MongoDB query
     try:
         user = await db.users.find_one({"_id": ObjectId(user_id)})
-    except:
+    except Exception:
         # If not ObjectId, try string search
         user = await db.users.find_one({"_id": user_id})
     
