@@ -90,7 +90,7 @@ const AuthModal = () => {
               <Sparkles className="w-7 h-7 text-white" />
             </div>
             <h2 className="text-2xl font-bold text-white mb-1">
-              {mode === 'login' ? 'Welcome Back' : 'Join KdM'}
+              {mode === 'login' ? 'Welcome Back' : 'Join Xtrix'}
             </h2>
             <p className="text-sm text-white/40">
               {mode === 'login' ? 'Sign in to your account' : 'Create your account and start sharing'}

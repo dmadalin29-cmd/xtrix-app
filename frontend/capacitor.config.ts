@@ -1,8 +1,8 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.kdm.app',
-  appName: 'KdM',
+  appId: 'com.xtrix.app',
+  appName: 'Xtrix',
   webDir: 'build',
   bundledWebRuntime: false,
   server: {

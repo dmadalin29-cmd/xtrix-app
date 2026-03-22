@@ -10,7 +10,7 @@ const api = axios.create({
 
 // Attach token to every request
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('kdm_token');
+  const token = localStorage.getItem('xtrix_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -22,8 +22,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('kdm_token');
-      localStorage.removeItem('kdm_user');
+      localStorage.removeItem('xtrix_token');
+      localStorage.removeItem('xtrix_user');
     }
     return Promise.reject(error);
   }

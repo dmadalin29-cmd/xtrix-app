@@ -111,7 +111,7 @@ const UploadPage = () => {
               <Check className="w-10 h-10 text-[#00f5d4]" />
             </motion.div>
             <h2 className="text-2xl font-bold text-white mb-2">Upload Complete!</h2>
-            <p className="text-sm text-white/40 mb-8">Your video is now live on KdM.</p>
+            <p className="text-sm text-white/40 mb-8">Your video is now live on Xtrix.</p>
             <div className="flex gap-4">
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={resetUpload} className="px-8 py-3 rounded-xl text-sm font-bold text-white" style={{ background: '#ff0050', boxShadow: '0 0 20px rgba(255,0,80,0.3)' }}>
                 Upload Another
@@ -202,7 +202,7 @@ const UploadPage = () => {
 
               <div>
                 <label className="text-sm font-semibold text-white/80 mb-2 block">Hashtags</label>
-                <input type="text" value={hashtags} onChange={(e) => setHashtags(e.target.value)} placeholder="#fyp #viral #kdm" className="w-full bg-transparent text-sm text-white placeholder-white/25 px-4 py-3 outline-none rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
+                <input type="text" value={hashtags} onChange={(e) => setHashtags(e.target.value)} placeholder="#fyp #viral #xtrix" className="w-full bg-transparent text-sm text-white placeholder-white/25 px-4 py-3 outline-none rounded-xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }} />
               </div>
 
               <div>

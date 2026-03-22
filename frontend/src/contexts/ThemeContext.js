@@ -5,13 +5,13 @@ const ThemeContext = createContext();
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
     // Load from localStorage or default to dark
-    const saved = localStorage.getItem('kdm-theme');
+    const saved = localStorage.getItem('xtrix-theme');
     return saved || 'dark';
   });
 
   useEffect(() => {
     // Save to localStorage
-    localStorage.setItem('kdm-theme', theme);
+    localStorage.setItem('xtrix-theme', theme);
     
     // Apply to document
     if (theme === 'light') {

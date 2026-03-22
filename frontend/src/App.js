@@ -32,9 +32,9 @@ function AppContent() {
 
   useEffect(() => {
     if (isNative) {
-      console.log(`🚀 KdM running on native ${platform}`);
+      console.log(`🚀 Xtrix running on native ${platform}`);
     } else {
-      console.log('🌐 KdM running on web');
+      console.log('🌐 Xtrix running on web');
     }
   }, [isNative, platform]);
 

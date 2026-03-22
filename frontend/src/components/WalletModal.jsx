@@ -142,7 +142,7 @@ const WalletModal = ({ open, onClose }) => {
                 <Coins className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Portofel KdM</h2>
+                <h2 className="text-xl font-bold text-white">Portofel Xtrix</h2>
                 <p className="text-xs text-white/40">Gestionează coins-urile tale</p>
               </div>
             </div>

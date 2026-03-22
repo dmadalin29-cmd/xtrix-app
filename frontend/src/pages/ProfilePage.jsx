@@ -163,7 +163,7 @@ const ProfilePage = () => {
           <p className="text-sm text-white/70 mt-4 max-w-md leading-relaxed font-body">{profileUser.bio || 'No bio yet'}</p>
           <div className="flex items-center gap-4 mt-3">
             <span className="flex items-center gap-1.5 text-xs text-white/30">
-              <Link className="w-3.5 h-3.5" /> kdm.com/@{profileUser.username}
+              <Link className="w-3.5 h-3.5" /> xtrix.app/@{profileUser.username}
             </span>
             <span className="flex items-center gap-1.5 text-xs text-white/30">
               <Calendar className="w-3.5 h-3.5" /> Joined 2024

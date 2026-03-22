@@ -1,4 +1,4 @@
-# KdM - Changelog
+# Xtrix - Changelog
 
 ## Session 2025-03-22 (Fork 2 - Current)
 
@@ -9,7 +9,7 @@
 - **Fix:** 
   - Added `hidden lg:flex` to Sidebar (visible doar ≥ 1024px)
   - Created Bottom Navigation Bar cu 5 tabs (For You, Discover, LIVE, Upload, Profile)
-  - Header responsive: logo KdM pe mobil, left offset doar desktop
+  - Header responsive: logo Xtrix pe mobil, left offset doar desktop
   - Content: `lg:ml-[280px]` + `pb-20 lg:pb-0` pentru safe area
 - **Files:** `/app/frontend/src/components/layout/Layout.jsx`
 - **Tested:** ✅ 6 screen sizes (360px → 1920px)
@@ -190,7 +190,44 @@
 
 ---
 
-*Last updated: 2025-03-22 14:05*
+## Session 2025-03-22 (Fork 3 - Current) - Part 2
+
+### ✅ COMPLETED - Rebranding: Xtrix (xtrix.app)
+
+#### Complete Rebrand from "KdM" to "Xtrix"
+- **Reason:** New domain xtrix.app acquired
+- **Changes:**
+  - App name: KdM → Xtrix
+  - Tagline: "Klip de Moment" → "Social Video Platform"
+  - Domain: kdm.com → xtrix.app
+  - App ID: com.kdm.app → com.xtrix.app
+  - localStorage keys: kdm_token → xtrix_token, kdm-theme → xtrix-theme
+  - All UI text, placeholders, share messages updated
+- **Files Updated:**
+  - `/app/frontend/public/index.html` (title, meta, apple-touch-icon cu "X" logo)
+  - `/app/frontend/public/manifest.json` (name, short_name)
+  - `/app/frontend/public/sw.js` (cache name: xtrix-cache-v2)
+  - `/app/frontend/capacitor.config.ts` (appId, appName)
+  - `/app/frontend/src/components/layout/Layout.jsx` (logo, search placeholder, footer)
+  - `/app/frontend/src/components/auth/AuthModal.jsx` (signup title)
+  - `/app/frontend/src/components/share/ShareModal.jsx` (share URL, text)
+  - `/app/frontend/src/components/WalletModal.jsx` (header title)
+  - `/app/frontend/src/pages/UploadPage.jsx` (success message, hashtag placeholder)
+  - `/app/frontend/src/pages/ProfilePage.jsx` (profile URL)
+  - `/app/frontend/src/pages/WatchStreamPage.jsx` (mock username)
+  - `/app/frontend/src/contexts/AuthContext.jsx` (localStorage keys)
+  - `/app/frontend/src/contexts/ThemeContext.js` (localStorage key)
+  - `/app/frontend/src/services/api.js` (localStorage keys)
+  - `/app/frontend/src/App.js` (console logs)
+  - `/app/frontend/package.json` (name: xtrix-app)
+  - All documentation: PRD.md, CHANGELOG.md, MOBILE_UX.md, CAPACITOR_BUILD_GUIDE.md, IMPLEMENTATION_SUMMARY.md
+- **New Documentation:** `/app/DEPLOYMENT_GUIDE_XTRIX.md` (production deploy pentru xtrix.app)
+- **Tested:** ✅ Screenshot validated - Logo "Xtrix", search "Search Xtrix...", title "Xtrix - Social Video Platform"
+- **Status:** REBRAND COMPLETE - Ready pentru xtrix.app launch!
+
+---
+
+*Last updated: 2025-03-22 14:58*
 ## Update 2025-03-22 13:23
 
 ### ✅ COMPLETED - Live Stream Viewer Mobile Redesign (CRITICAL)
@@ -217,7 +254,7 @@
 #### Layout.jsx - Mobile Navigation System
 - **Sidebar:** `hidden lg:flex` (visible doar ≥ 1024px)
 - **Header responsive:** 
-  - Logo KdM pe mobil (hidden lg: pe desktop unde e în sidebar)
+  - Logo Xtrix pe mobil (hidden lg: pe desktop unde e în sidebar)
   - `left-0 lg:left-[280px]` (responsive offset)
   - Search bar: `pl-9 lg:pl-11`, wallet balance `hidden sm:inline`
   - Upload button: `hidden sm:flex`

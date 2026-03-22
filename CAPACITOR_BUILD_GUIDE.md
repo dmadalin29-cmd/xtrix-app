@@ -1,8 +1,8 @@
-# 📱 KdM - Native App Build Guide
+# 📱 Xtrix - Native App Build Guide
 
 ## Capacitor Setup Complete ✅
 
-KdM este acum pregătit pentru build-uri native iOS și Android!
+Xtrix este acum pregătit pentru build-uri native iOS și Android!
 
 ---
 
@@ -33,9 +33,9 @@ KdM este acum pregătit pentru build-uri native iOS și Android!
    ```
 
 4. **În Android Studio:**
-   - Schimbă `applicationId` în `android/app/build.gradle` (linia ~7): `com.kdm.app`
+   - Schimbă `applicationId` în `android/app/build.gradle` (linia ~7): `com.xtrix.app`
    - Setează `versionCode` și `versionName`
-   - Update `android/app/src/main/res/values/strings.xml` cu "KdM"
+   - Update `android/app/src/main/res/values/strings.xml` cu "Xtrix"
    - Generate Signed APK: Build → Generate Signed Bundle/APK → APK
    - Alege keystore (create new sau existing)
    - Build Release APK
@@ -67,10 +67,10 @@ KdM este acum pregătit pentru build-uri native iOS și Android!
    ```
 
 4. **În Xcode:**
-   - Schimbă Bundle Identifier: `com.kdm.app`
+   - Schimbă Bundle Identifier: `com.xtrix.app`
    - Setează versiune și build number
    - Adaugă Team (Apple Developer Account)
-   - Update Display Name: "KdM"
+   - Update Display Name: "Xtrix"
    - Configure Signing & Capabilities:
      - ✅ Automatic Signing (needs Apple Developer account $99/year)
      - ✅ Push Notifications (optional pentru viitor)
@@ -89,13 +89,13 @@ KdM este acum pregătit pentru build-uri native iOS și Android!
 ### Android
 - **Adaptive Icon:** `android/app/src/main/res/mipmap-*/ic_launcher.png`
   - Sizes: 48×48, 72×72, 96×96, 144×144, 192×192
-  - Background: Solid #ff0050 (KdM red)
+  - Background: Solid #ff0050 (Xtrix red)
   - Foreground: White "K" logo transparent PNG
 
 - **Splash Screen:** `android/app/src/main/res/drawable/splash.png`
   - Size: 1920×1920px
   - Background: #000000
-  - Center: KdM logo
+  - Center: Xtrix logo
 
 ### iOS
 - **App Icon:** `ios/App/App/Assets.xcassets/AppIcon.appiconset/`
@@ -105,7 +105,7 @@ KdM este acum pregătit pentru build-uri native iOS și Android!
 - **Splash Screen:** `ios/App/App/Assets.xcassets/Splash.imageset/`
   - Sizes: 1×, 2×, 3× (universal)
   - Background: #000000
-  - Center: KdM logo
+  - Center: Xtrix logo
 
 ---
 
@@ -114,8 +114,8 @@ KdM este acum pregătit pentru build-uri native iOS și Android!
 ### capacitor.config.ts
 ```typescript
 {
-  appId: 'com.kdm.app',
-  appName: 'KdM',
+  appId: 'com.xtrix.app',
+  appName: 'Xtrix',
   webDir: 'build',
   plugins: {
     SplashScreen: { launchShowDuration: 2000, backgroundColor: '#000000' },
@@ -172,7 +172,7 @@ KdM este acum pregătit pentru build-uri native iOS și Android!
 ### Production API
 În `/app/frontend/.env.production`:
 ```
-REACT_APP_BACKEND_URL=https://api.kdm.com
+REACT_APP_BACKEND_URL=https://api.xtrix.com
 ```
 
 ### Build Commands
@@ -202,17 +202,17 @@ npx cap sync ios
 - **Category:** Social Networking
 - **Age Rating:** 13+ (Frequent/Intense Realistic Violence: NO, Mature/Suggestive Themes: NO)
 - **Keywords:** video,social,live,streaming,clips,moments,create,viral,tiktok
-- **Promotional Text:** "Descoperă momente virale, creează conținut unic, și conectează-te cu comunitatea KdM!"
+- **Promotional Text:** "Descoperă momente virale, creează conținut unic, și conectează-te cu comunitatea Xtrix!"
 
 ---
 
 ## 🔍 Native Features Integrated
 
 - ✅ **Status Bar:** Dark theme (#000000)
-- ✅ **Splash Screen:** 2s cu logo KdM
+- ✅ **Splash Screen:** 2s cu logo Xtrix
 - ✅ **Camera Access:** Pentru video upload
 - ✅ **File System:** Pentru video storage
-- ✅ **Deep Links:** `kdm://` scheme pentru share
+- ✅ **Deep Links:** `xtrix://` scheme pentru share
 - ✅ **Safe Area:** iOS notch support
 - ✅ **Orientation:** Portrait locked (TikTok-style)
 

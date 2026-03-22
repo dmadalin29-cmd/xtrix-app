@@ -73,8 +73,8 @@ const Sidebar = () => {
           <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.2))' }} />
         </div>
         <div>
-          <span className="text-xl font-bold tracking-tight text-white">KdM</span>
-          <span className="text-[10px] text-white/30 block -mt-0.5 tracking-widest uppercase">Klip de Moment</span>
+          <span className="text-xl font-bold tracking-tight text-white">Xtrix</span>
+          <span className="text-[10px] text-white/30 block -mt-0.5 tracking-widest uppercase">Social Video</span>
         </div>
       </div>
 
@@ -152,7 +152,7 @@ const Sidebar = () => {
 
       {/* Footer */}
       <div className="p-4 border-t border-white/[0.06]">
-        <p className="text-[10px] text-white/20 text-center leading-relaxed">&copy; 2025 KdM &middot; Terms &middot; Privacy &middot; Safety</p>
+        <p className="text-[10px] text-white/20 text-center leading-relaxed">&copy; 2025 Xtrix &middot; Terms &middot; Privacy &middot; Safety</p>
       </div>
     </aside>
   );
@@ -179,7 +179,7 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
         <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff0050, #ff3366)' }}>
           <Sparkles className="w-4 h-4 text-white" />
         </div>
-        <span className="text-lg font-bold text-white">KdM</span>
+        <span className="text-lg font-bold text-white">Xtrix</span>
       </div>
       
       {/* Search */}
@@ -194,7 +194,7 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
           <Search className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
           <input
             type="text"
-            placeholder="Search KdM..."
+            placeholder="Search Xtrix..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setSearchFocused(true)}

@@ -25,14 +25,14 @@ const ShareModal = ({ open, onClose, videoId, description }) => {
   };
 
   const shareToSocial = (platform) => {
-    const text = encodeURIComponent(description || 'Check out this video on KdM!');
+    const text = encodeURIComponent(description || 'Check out this video on Xtrix!');
     const url = encodeURIComponent(shareUrl);
     const links = {
       twitter: `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
       facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
       whatsapp: `https://wa.me/?text=${text}%20${url}`,
       telegram: `https://t.me/share/url?url=${url}&text=${text}`,
-      email: `mailto:?subject=Check this KdM video&body=${text}%20${url}`,
+      email: `mailto:?subject=Check this Xtrix video&body=${text}%20${url}`,
     };
     window.open(links[platform], '_blank', 'width=600,height=400');
   };

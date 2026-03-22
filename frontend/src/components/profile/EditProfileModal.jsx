@@ -39,7 +39,7 @@ const EditProfileModal = ({ open, onClose }) => {
         await usersAPI.updateProfile(updates);
       }
       // Refresh user data
-      const token = localStorage.getItem('kdm_token');
+      const token = localStorage.getItem('xtrix_token');
       if (token) {
         const res = await import('../../services/api').then(m => m.authAPI.getMe());
         localStorage.setItem('kdm_user', JSON.stringify(res.data));

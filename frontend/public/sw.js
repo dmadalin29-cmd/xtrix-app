@@ -1,4 +1,4 @@
-const CACHE_NAME = 'kdm-cache-v2';
+const CACHE_NAME = 'xtrix-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

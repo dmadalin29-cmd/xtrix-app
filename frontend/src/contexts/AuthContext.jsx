@@ -11,7 +11,7 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('kdm_token'));
+  const [token, setToken] = useState(localStorage.getItem('xtrix_token'));
   const [loading, setLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -24,8 +24,8 @@ export const AuthProvider = ({ children }) => {
       const res = await authAPI.getMe();
       setUser(res.data);
     } catch (err) {
-      localStorage.removeItem('kdm_token');
-      localStorage.removeItem('kdm_user');
+      localStorage.removeItem('xtrix_token');
+      localStorage.removeItem('xtrix_user');
       setToken(null);
       setUser(null);
     } finally {
@@ -40,8 +40,8 @@ export const AuthProvider = ({ children }) => {
   const login = async (email, password) => {
     const res = await authAPI.login({ email, password });
     const { user: userData, token: newToken } = res.data;
-    localStorage.setItem('kdm_token', newToken);
-    localStorage.setItem('kdm_user', JSON.stringify(userData));
+    localStorage.setItem('xtrix_token', newToken);
+    localStorage.setItem('xtrix_user', JSON.stringify(userData));
     setToken(newToken);
     setUser(userData);
     setShowAuthModal(false);
@@ -51,8 +51,8 @@ export const AuthProvider = ({ children }) => {
   const register = async (username, email, password, displayName) => {
     const res = await authAPI.register({ username, email, password, displayName });
     const { user: userData, token: newToken } = res.data;
-    localStorage.setItem('kdm_token', newToken);
-    localStorage.setItem('kdm_user', JSON.stringify(userData));
+    localStorage.setItem('xtrix_token', newToken);
+    localStorage.setItem('xtrix_user', JSON.stringify(userData));
     setToken(newToken);
     setUser(userData);
     setShowAuthModal(false);

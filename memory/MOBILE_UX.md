@@ -1,4 +1,4 @@
-# KdM - Mobile UX Guidelines
+# Xtrix - Mobile UX Guidelines
 
 ## 📱 Design Philosophy
 **Mobile-First, TikTok-Inspired, Ultra-Modern**

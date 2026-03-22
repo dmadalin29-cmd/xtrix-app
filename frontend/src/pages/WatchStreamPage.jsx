@@ -194,7 +194,7 @@ const WatchStreamPage = () => {
     // Mock chat messages for demo
     setChatMessages([
       { id: '1', user: { username: 'viewer1', avatar: '' }, text: 'Super stream! 🔥', timestamp: new Date() },
-      { id: '2', user: { username: 'fan_kdm', avatar: '' }, text: 'Salut! Cum merge?', timestamp: new Date() },
+      { id: '2', user: { username: 'fan_xtrix', avatar: '' }, text: 'Salut! Cum merge?', timestamp: new Date() },
       { id: '3', user: { username: 'creator_bella', avatar: '' }, text: 'Mulțumesc pentru suport! ❤️', timestamp: new Date() }
     ]);
   }, [streamId, navigate]);
