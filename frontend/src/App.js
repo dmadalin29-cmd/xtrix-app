@@ -1,9 +1,11 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import './App.css';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import { AuthProvider } from './contexts/AuthContext';
+import { ThemeProvider } from './contexts/ThemeContext';
 import AuthModal from './components/auth/AuthModal';
+import { useCapacitor } from './hooks/useCapacitor';
 
 const FeedPage = lazy(() => import('./pages/FeedPage'));
 const DiscoverPage = lazy(() => import('./pages/DiscoverPage'));
@@ -25,7 +27,17 @@ const LoadingFallback = () => (
   </div>
 );
 
-function App() {
+function AppContent() {
+  const { isNative, platform } = useCapacitor();
+
+  useEffect(() => {
+    if (isNative) {
+      console.log(`🚀 KdM running on native ${platform}`);
+    } else {
+      console.log('🌐 KdM running on web');
+    }
+  }, [isNative, platform]);
+
   return (
     <div className="App">
       <BrowserRouter>
@@ -68,6 +80,14 @@ function App() {
         </AuthProvider>
       </BrowserRouter>
     </div>
+  );
+}
+
+function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   );
 }
 

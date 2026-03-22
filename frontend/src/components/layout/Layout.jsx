@@ -4,10 +4,11 @@ import { motion } from 'framer-motion';
 import {
   Home, Compass, Users, Radio, User, Search, Upload, Bell,
   MessageCircle, Settings, LogOut, BadgeCheck, Plus,
-  ChevronDown, ChevronUp, Sparkles, Coins, Video
+  ChevronDown, ChevronUp, Sparkles, Coins, Video, Sun, Moon
 } from 'lucide-react';
 import { formatNumber } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { discoverAPI, notificationsAPI } from '../../services/api';
 import { Avatar, AvatarImage, AvatarFallback } from '../ui/avatar';
 import WalletModal from '../WalletModal';
@@ -160,6 +161,7 @@ const Sidebar = () => {
 const Header = ({ showWalletModal, setShowWalletModal }) => {
   const navigate = useNavigate();
   const { user, isAuthenticated, setShowAuthModal, logout, requireAuth } = useAuth();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [searchFocused, setSearchFocused] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [notifications, setNotifications] = useState([]);
@@ -215,6 +217,24 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2">
+        {/* Theme Toggle */}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleTheme}
+                className="w-9 h-9 rounded-full flex items-center justify-center border border-white/10 hover:border-[#00f5d4]/40 transition-colors"
+                style={{ background: 'rgba(255,255,255,0.04)' }}
+              >
+                {isDark ? <Sun className="w-4 h-4 text-[#00f5d4]" /> : <Moon className="w-4 h-4 text-[#ff0050]" />}
+              </motion.button>
+            </TooltipTrigger>
+            <TooltipContent><p>Schimbă tema</p></TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
         {isAuthenticated && (
           <TooltipProvider>
             <Tooltip>

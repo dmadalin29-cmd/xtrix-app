@@ -574,16 +574,19 @@ const WatchStreamPage = () => {
         <span className="text-xs font-bold text-white font-body">LIVE</span>
       </div>
 
-      {/* Swipe Indicators (TikTok-style) */}
+      {/* Swipe Indicators (TikTok-style) - Enhanced with hints */}
       {allStreams.length > 1 && (
         <>
           {currentStreamIndex < allStreams.length - 1 && (
             <motion.div
               animate={{ y: [0, 8, 0] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-1/2 right-4 z-[85] opacity-40"
+              className="absolute bottom-1/3 left-1/2 -translate-x-1/2 z-[85] flex flex-col items-center gap-2"
             >
-              <ChevronDown className="w-8 h-8 text-white" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))' }} />
+              <ChevronDown className="w-10 h-10 text-white" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.9))' }} />
+              <div className="px-4 py-1.5 rounded-full backdrop-blur-xl" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                <p className="text-xs font-bold text-white/80 font-body">Swipe up pentru next</p>
+              </div>
             </motion.div>
           )}
           
@@ -591,9 +594,12 @@ const WatchStreamPage = () => {
             <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-1/2 left-4 z-[85] opacity-40 rotate-180"
+              className="absolute top-1/3 left-1/2 -translate-x-1/2 z-[85] flex flex-col items-center gap-2"
             >
-              <ChevronDown className="w-8 h-8 text-white" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))' }} />
+              <div className="px-4 py-1.5 rounded-full backdrop-blur-xl" style={{ background: 'rgba(0,0,0,0.6)' }}>
+                <p className="text-xs font-bold text-white/80 font-body">Swipe down pentru prev</p>
+              </div>
+              <ChevronDown className="w-10 h-10 text-white rotate-180" style={{ filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.9))' }} />
             </motion.div>
           )}
         </>

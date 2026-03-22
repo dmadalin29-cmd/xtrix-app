@@ -22,6 +22,24 @@
   --kdm-glow-cyan: 0 0 20px rgba(0, 245, 212, 0.15);
 }
 
+/* Light Mode Theme */
+.light-mode {
+  --kdm-bg: #ffffff;
+  --kdm-surface: #f8f8f9;
+  --kdm-surface-2: #f0f0f2;
+  --kdm-surface-3: #e8e8eb;
+  --kdm-border: rgba(0, 0, 0, 0.08);
+  --kdm-glass: rgba(0, 0, 0, 0.02);
+  --kdm-glass-hover: rgba(0, 0, 0, 0.04);
+  --kdm-accent: #ff0050;
+  --kdm-accent-2: #00d4b8;
+  --kdm-text: #0a0a0f;
+  --kdm-text-secondary: rgba(0, 0, 0, 0.65);
+  --kdm-text-muted: rgba(0, 0, 0, 0.4);
+  --kdm-glow: 0 0 20px rgba(255, 0, 80, 0.1);
+  --kdm-glow-cyan: 0 0 20px rgba(0, 212, 180, 0.1);
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -158,8 +176,8 @@ input:focus, textarea:focus {
 }
 
 @keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from { transform: rotate(0deg) translateZ(0); }
+  to { transform: rotate(360deg) translateZ(0); }
 }
 
 @keyframes shimmer {
@@ -228,7 +246,7 @@ input:focus, textarea:focus {
   z-index: 0;
 }
 
-/* Snap scroll for video feed */
+/* Snap scroll for video feed - Optimized for 60fps */
 .snap-scroll {
   scroll-snap-type: y mandatory;
   overflow-y: scroll;
@@ -237,6 +255,8 @@ input:focus, textarea:focus {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
   overscroll-behavior-y: contain;
+  will-change: scroll-position;
+  transform: translateZ(0); /* Force GPU acceleration */
 }
 
 .snap-scroll::-webkit-scrollbar {
@@ -251,6 +271,8 @@ input:focus, textarea:focus {
 .snap-item {
   scroll-snap-align: start;
   scroll-snap-stop: always;
+  will-change: transform;
+  transform: translateZ(0); /* GPU acceleration for smooth rendering */
 }
 
 /* Video player wrapper */
@@ -273,7 +295,7 @@ input:focus, textarea:focus {
   z-index: 1;
 }
 
-/* Music disc animation */
+/* Music disc animation - GPU accelerated */
 .music-disc {
   width: 48px;
   height: 48px;
@@ -282,6 +304,8 @@ input:focus, textarea:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .music-disc-inner {
@@ -291,7 +315,7 @@ input:focus, textarea:focus {
   background: var(--kdm-bg);
 }
 
-/* Interactive button styles */
+/* Interactive button styles - Optimized for 60fps */
 .action-btn {
   display: flex;
   flex-direction: column;
@@ -299,14 +323,15 @@ input:focus, textarea:focus {
   gap: 4px;
   cursor: pointer;
   transition: transform 0.2s ease;
+  will-change: transform;
 }
 
 .action-btn:hover {
-  transform: scale(1.1);
+  transform: scale(1.1) translateZ(0);
 }
 
 .action-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.95) translateZ(0);
 }
 
 /* Sidebar nav item */

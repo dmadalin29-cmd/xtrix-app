@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef, useCallback, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -14,7 +14,10 @@ import ReactPlayer from 'react-player';
 import ShareModal from '../components/share/ShareModal';
 import StoriesBar from '../components/stories/StoriesBar';
 
-const VideoCard = ({ video, isActive }) => {
+// Lazy load ShareModal for better performance
+const LazyShareModal = lazy(() => import('../components/share/ShareModal'));
+
+const VideoCard = React.memo(({ video, isActive }) => {
   const { requireAuth, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [liked, setLiked] = useState(video.isLiked || false);
@@ -273,13 +276,15 @@ const VideoCard = ({ video, isActive }) => {
       </AnimatePresence>
 
       {/* Share Modal */}
-      <ShareModal open={showShare} onClose={() => setShowShare(false)} videoId={video.id} description={video.description} />
+      <Suspense fallback={null}>
+        <LazyShareModal open={showShare} onClose={() => setShowShare(false)} videoId={video.id} description={video.description} />
+      </Suspense>
     </div>
   );
-};
+});
 
 // Nested Reply Component
-const CommentReply = ({ reply, commentId, onLike }) => {
+const CommentReply = React.memo(({ reply, commentId, onLike }) => {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(reply.likes || 0);
 
@@ -315,10 +320,10 @@ const CommentReply = ({ reply, commentId, onLike }) => {
       </div>
     </motion.div>
   );
-};
+});
 
 // Single Comment Item with Nested Replies
-const CommentItem = ({ comment, videoId, onReplySuccess }) => {
+const CommentItem = React.memo(({ comment, videoId, onReplySuccess }) => {
   const { requireAuth } = useAuth();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(comment.likes || 0);
@@ -474,9 +479,9 @@ const CommentItem = ({ comment, videoId, onReplySuccess }) => {
       </AnimatePresence>
     </div>
   );
-};
+});
 
-const CommentsPanel = ({ video, onClose }) => {
+const CommentsPanel = React.memo(({ video, onClose }) => {
   const { requireAuth, isAuthenticated } = useAuth();
   const [commentText, setCommentText] = useState('');
   const [localComments, setLocalComments] = useState([]);
@@ -557,7 +562,7 @@ const CommentsPanel = ({ video, onClose }) => {
       </motion.div>
     </motion.div>
   );
-};
+});
 
 const FeedPage = ({ following: isFollowing }) => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -620,9 +625,12 @@ const FeedPage = ({ following: isFollowing }) => {
       } else if (vids.length > 0) {
         setFeedVideos(vids);
       } else {
+        // Backend nu are videos - use mock data for demo
+        console.log('No videos from backend, using mock data');
         setFeedVideos(mockVideos);
       }
     } catch (err) {
+      console.error('Feed fetch error:', err);
       if (!append) setFeedVideos(mockVideos);
     } finally {
       setLoading(false);
