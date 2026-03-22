@@ -153,9 +153,9 @@ async def get_feed(page: int = Query(1, ge=1), limit: int = Query(10, le=30), us
     bookmarked_set = set()
     if user_id:
         liked_docs = await db.likes.find({"userId": user_id, "videoId": {"$in": video_ids}}).to_list(limit)
-        liked_set = {l["videoId"] for l in liked_docs}
+        liked_set = {like_doc["videoId"] for like_doc in liked_docs}
         bookmarked_docs = await db.bookmarks.find({"userId": user_id, "videoId": {"$in": video_ids}}).to_list(limit)
-        bookmarked_set = {b["videoId"] for b in bookmarked_docs}
+        bookmarked_set = {bookmark_doc["videoId"] for bookmark_doc in bookmarked_docs}
     
     # Batch fetch all users (N+1 fix)
     user_ids = [doc.get("userId") for doc in docs if doc.get("userId")]
@@ -205,9 +205,9 @@ async def get_following_feed(page: int = Query(1, ge=1), limit: int = Query(10, 
     # Batch fetch likes and bookmarks (N+1 fix)
     video_ids = [doc["_id"] for doc in docs]
     liked_docs = await db.likes.find({"userId": user_id, "videoId": {"$in": video_ids}}).to_list(limit)
-    liked_set = {l["videoId"] for l in liked_docs}
+    liked_set = {like_doc["videoId"] for like_doc in liked_docs}
     bookmarked_docs = await db.bookmarks.find({"userId": user_id, "videoId": {"$in": video_ids}}).to_list(limit)
-    bookmarked_set = {b["videoId"] for b in bookmarked_docs}
+    bookmarked_set = {bookmark_doc["videoId"] for bookmark_doc in bookmarked_docs}
     
     # Batch fetch all users (N+1 fix)
     user_ids = [doc.get("userId") for doc in docs if doc.get("userId")]
