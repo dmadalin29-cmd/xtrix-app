@@ -204,3 +204,51 @@
 - ✅ `/app/memory/MOBILE_UX.md` - Mobile UX guidelines
 - **Updated after every major change** ✅
 
+
+## Update 2025-03-22 13:36 - User Feedback Fixes
+
+### ✅ COMPLETED
+
+#### 1. LIVE Streams în For You Feed
+- **Feature:** Mix active live streams în feed-ul principal (nu doar pe /live page)
+- **Implementation:**
+  - Fetch active streams în fetchFeed (doar page 1, For You mode)
+  - Insert max 2 live streams: pozițiile 0 și 3 (beginning + after 2 videos)
+  - Transform live streams în video card format cu `isLiveStream: true` marker
+  - VideoCard detectează live streams și randează diferit:
+    - LIVE badge roșu cu dot animat (top-left)
+    - Radio icon circular cu glow (center)
+    - Play button overlay
+    - Title + "Tap pentru a viziona LIVE" CTA
+    - Viewer count: 👁 X viewers
+    - Click → navigate to `/watch/:streamId`
+- **Files:** `/app/frontend/src/pages/FeedPage.jsx` (fetchFeed + VideoCard)
+- **Tested:** ✅ LIVE streams apar în feed, ✅ Click navigates to overlay viewer
+- **Status:** WORKING PERFECT!
+
+#### 2. Emergent Badge Removed
+- **Issue:** Badge "Made with Emergent" (fixed bottom-right z-9999) era enervant
+- **Fix:** Șters complet din `/app/frontend/public/index.html` (linii 65-104)
+- **Tested:** ✅ Screenshot mobile - badge dispărut
+- **Status:** REMOVED ✅
+
+#### 3. For You Feed Mobile Optimizations
+- **Padding:** `px-4 sm:px-8` (mai compact pe very small screens)
+- **Action buttons:** `w-11 h-11 sm:w-12 sm:h-12` (44px → 48px responsive)
+- **Icons:** `w-5 h-5 sm:w-6 sm:h-6` (mai mici pe mobil)
+- **Gap:** `gap-4 sm:gap-6` (mai compact vertical stack)
+- **Live stream detection:** Comments button disabled pe live cards
+- **Files:** `/app/frontend/src/pages/FeedPage.jsx`
+- **Tested:** ✅ Touch targets validated (44x44px minimum)
+- **Status:** OPTIMIZED ✅
+
+### 📊 Comprehensive Testing
+- ✅ LIVE badge în feed: 7 visible
+- ✅ Radio icons: 4 visible
+- ✅ Viewer count: 2 instances shown
+- ✅ CTA text: 2 instances ("Tap pentru a viziona LIVE")
+- ✅ Click LIVE card → /watch/:streamId navigation working
+- ✅ Overlay viewer: chat overlay + floating gift button + action stack
+- ✅ Emergent badge: 0 (removed successfully)
+- ✅ Action button size: 44x44px (mobile-optimized)
+

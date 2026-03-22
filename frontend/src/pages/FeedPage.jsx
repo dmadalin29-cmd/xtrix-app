@@ -1,12 +1,13 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
   Heart, MessageCircle, Share2, Bookmark, Music, Volume2,
   VolumeX, Play, ChevronUp, ChevronDown, BadgeCheck,
-  Send, X
+  Send, X, Radio, Eye
 } from 'lucide-react';
 import { videos as mockVideos, comments as mockComments, formatNumber } from '../data/mockData';
-import { videosAPI } from '../services/api';
+import { videosAPI, liveAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
 import ReactPlayer from 'react-player';
@@ -15,6 +16,7 @@ import StoriesBar from '../components/stories/StoriesBar';
 
 const VideoCard = ({ video, isActive }) => {
   const { requireAuth, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [liked, setLiked] = useState(video.isLiked || false);
   const [bookmarked, setBookmarked] = useState(video.isBookmarked || false);
   const [likeCount, setLikeCount] = useState(video.likes || 0);
@@ -26,6 +28,16 @@ const VideoCard = ({ video, isActive }) => {
   const [playerReady, setPlayerReady] = useState(false);
   const [showShare, setShowShare] = useState(false);
   const playTimeoutRef = useRef(null);
+
+  // Detect if this is a live stream card
+  const isLiveStream = video.isLiveStream === true;
+
+  // For live streams, handle click to navigate
+  const handleLiveClick = () => {
+    if (isLiveStream) {
+      navigate(`/watch/${video.streamId}`);
+    }
+  };
 
   useEffect(() => {
     // Clear any pending play timeout on cleanup or state change
@@ -96,22 +108,52 @@ const VideoCard = ({ video, isActive }) => {
   };
 
   return (
-    <div className="snap-item flex items-center justify-center gap-5 py-4 px-8" style={{ height: 'calc(100vh - 64px)' }}>
+    <div className="snap-item flex items-center justify-center gap-5 py-4 px-4 sm:px-8" style={{ height: 'calc(100vh - 64px)' }}>
       {/* Video Container */}
-      <div className="relative h-full aspect-[9/16] max-h-[calc(100vh-96px)] rounded-2xl overflow-hidden group cursor-pointer" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }} onDoubleClick={handleDoubleClick} onClick={() => { if (playTimeoutRef.current) { clearTimeout(playTimeoutRef.current); } setPlaying(p => !p); }}>
-        {/* Video Player */}
-        <ReactPlayer
-          url={video.videoUrl}
-          width="100%"
-          height="100%"
-          playing={playing}
-          muted={muted}
-          loop
-          style={{ position: 'absolute', top: 0, left: 0 }}
-          onReady={() => setPlayerReady(true)}
-          onError={(e) => { console.warn('Video error:', e); setPlaying(false); }}
-          config={{ youtube: { playerVars: { controls: 0, modestbranding: 1, rel: 0, showinfo: 0 } } }}
-        />
+      <div 
+        className={`relative h-full aspect-[9/16] max-h-[calc(100vh-96px)] rounded-2xl overflow-hidden group ${isLiveStream ? 'cursor-pointer' : ''}`} 
+        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }} 
+        onDoubleClick={isLiveStream ? handleLiveClick : handleDoubleClick} 
+        onClick={isLiveStream ? handleLiveClick : () => { if (playTimeoutRef.current) { clearTimeout(playTimeoutRef.current); } setPlaying(p => !p); }}
+      >
+        {/* Live Stream Badge (if is live) */}
+        {isLiveStream && (
+          <div className="absolute top-4 left-4 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: '#ff0050' }}>
+            <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+            <span className="text-xs font-bold text-white font-body">LIVE</span>
+          </div>
+        )}
+
+        {/* Video Player (or Live Stream Preview) */}
+        {isLiveStream ? (
+          // Live stream preview (thumbnail or placeholder)
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-pink-900/40 to-black flex items-center justify-center">
+            <div className="text-center">
+              <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 mx-auto" style={{ background: 'rgba(255,0,80,0.2)' }}>
+                <Radio className="w-10 h-10 text-[#ff0050]" />
+              </div>
+              <p className="text-white/90 text-lg font-bold font-display mb-1">{video.description}</p>
+              <p className="text-white/50 text-sm font-body">Tap pentru a viziona LIVE</p>
+              <div className="flex items-center gap-2 justify-center mt-3">
+                <Eye className="w-4 h-4 text-white/60" />
+                <span className="text-sm font-bold text-white/80 font-body">{video.views} viewers</span>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <ReactPlayer
+            url={video.videoUrl}
+            width="100%"
+            height="100%"
+            playing={playing}
+            muted={muted}
+            loop
+            style={{ position: 'absolute', top: 0, left: 0 }}
+            onReady={() => setPlayerReady(true)}
+            onError={(e) => { console.warn('Video error:', e); setPlaying(false); }}
+            config={{ youtube: { playerVars: { controls: 0, modestbranding: 1, rel: 0, showinfo: 0 } } }}
+          />
+        )}
 
         {/* Thumbnail fallback */}
         {video.thumbnail && <img src={video.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ zIndex: playing ? -1 : 1 }} />}
@@ -174,37 +216,37 @@ const VideoCard = ({ video, isActive }) => {
         </button>
       </div>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col items-center gap-6">
+      {/* Action Buttons - Responsive sizing */}
+      <div className="flex flex-col items-center gap-4 sm:gap-6">
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <motion.button onClick={handleLike} animate={liked ? { scale: [1, 1.3, 1] } : {}} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${liked ? 'bg-[#ff0050]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`} style={liked ? { boxShadow: '0 0 20px rgba(255,0,80,0.3)' } : {}}>
-            <Heart className={`w-6 h-6 ${liked ? 'text-[#ff0050]' : 'text-white'}`} fill={liked ? '#ff0050' : 'none'} />
+          <motion.button onClick={isLiveStream ? handleLiveClick : handleLike} animate={liked ? { scale: [1, 1.3, 1] } : {}} className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${liked ? 'bg-[#ff0050]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`} style={liked ? { boxShadow: '0 0 20px rgba(255,0,80,0.3)' } : {}}>
+            <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${liked ? 'text-[#ff0050]' : 'text-white'}`} fill={liked ? '#ff0050' : 'none'} />
           </motion.button>
-          <span className={`text-xs font-semibold ${liked ? 'text-[#ff0050]' : 'text-white/60'}`}>{formatNumber(likeCount)}</span>
+          <span className={`text-xs font-semibold font-body ${liked ? 'text-[#ff0050]' : 'text-white/60'}`}>{formatNumber(likeCount)}</span>
         </motion.div>
 
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <button onClick={() => setShowComments(true)} className="w-12 h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors">
-            <MessageCircle className="w-6 h-6 text-white" />
+          <button onClick={() => !isLiveStream && setShowComments(true)} disabled={isLiveStream} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors disabled:opacity-50">
+            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </button>
-          <span className="text-xs font-semibold text-white/60">{formatNumber(video.comments || 0)}</span>
+          <span className="text-xs font-semibold text-white/60 font-body">{formatNumber(video.comments || 0)}</span>
         </motion.div>
 
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <motion.button onClick={handleBookmark} animate={bookmarked ? { scale: [1, 1.3, 1] } : {}} className={`w-12 h-12 rounded-full flex items-center justify-center transition-colors ${bookmarked ? 'bg-[#f5c518]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`}>
-            <Bookmark className={`w-6 h-6 ${bookmarked ? 'text-[#f5c518]' : 'text-white'}`} fill={bookmarked ? '#f5c518' : 'none'} />
+          <motion.button onClick={handleBookmark} animate={bookmarked ? { scale: [1, 1.3, 1] } : {}} className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${bookmarked ? 'bg-[#f5c518]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`}>
+            <Bookmark className={`w-5 h-5 sm:w-6 sm:h-6 ${bookmarked ? 'text-[#f5c518]' : 'text-white'}`} fill={bookmarked ? '#f5c518' : 'none'} />
           </motion.button>
-          <span className={`text-xs font-semibold ${bookmarked ? 'text-[#f5c518]' : 'text-white/60'}`}>{formatNumber(video.bookmarks || 0)}</span>
+          <span className={`text-xs font-semibold font-body ${bookmarked ? 'text-[#f5c518]' : 'text-white/60'}`}>{formatNumber(video.bookmarks || 0)}</span>
         </motion.div>
 
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <button onClick={() => setShowShare(true)} className="w-12 h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors">
-            <Share2 className="w-6 h-6 text-white" />
+          <button onClick={() => setShowShare(true)} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors">
+            <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
           </button>
-          <span className="text-xs font-semibold text-white/60">{formatNumber(video.shares || 0)}</span>
+          <span className="text-xs font-semibold text-white/60 font-body">{formatNumber(video.shares || 0)}</span>
         </motion.div>
 
-        <div className={`music-disc mt-2 ${playing ? 'animate-spin-slow' : ''}`}>
+        <div className={`music-disc mt-2 ${!isLiveStream && playing ? 'animate-spin-slow' : ''}`}>
           <img src={video.user?.avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
         </div>
       </div>
@@ -522,8 +564,42 @@ const FeedPage = ({ following: isFollowing }) => {
       } else {
         res = await videosAPI.getFeed(pageNum, 10);
       }
-      const vids = res.data.videos || [];
+      let vids = res.data.videos || [];
       setHasMore(res.data.hasMore || false);
+
+      // Fetch active live streams and mix into feed (only for page 1, For You feed)
+      if (pageNum === 1 && !isFollowing) {
+        try {
+          const liveRes = await liveAPI.getActiveStreams();
+          const liveStreams = (liveRes.data || []).slice(0, 2); // Max 2 live streams in feed
+          
+          // Transform live streams to video card format with special "LIVE" marker
+          const liveCards = liveStreams.map(stream => ({
+            id: stream.id,
+            isLiveStream: true, // Special marker
+            user: stream.user,
+            description: stream.title,
+            music: 'LIVE Stream',
+            likes: stream.likes || 0,
+            comments: 0,
+            shares: 0,
+            bookmarks: 0,
+            views: stream.currentViewers || 0,
+            videoUrl: stream.hlsUrl || '',
+            thumbnail: '',
+            hashtags: stream.hashtags || [],
+            createdAt: stream.createdAt,
+            streamId: stream.id
+          }));
+          
+          // Insert live streams at positions 0 and 3 (beginning and after 2 videos)
+          if (liveCards.length > 0) {
+            vids = [liveCards[0], ...vids.slice(0, 2), ...(liveCards[1] ? [liveCards[1]] : []), ...vids.slice(2)];
+          }
+        } catch (err) {
+          console.log('No live streams to mix in feed');
+        }
+      }
 
       if (append) {
         setFeedVideos(prev => [...prev, ...vids]);
