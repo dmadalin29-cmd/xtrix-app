@@ -1,0 +1,16 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "services": {
+    "backend": {
+      "source": "backend",
+      "build": {
+        "builder": "NIXPACKS",
+        "buildCommand": "pip install -r requirements.txt"
+      },
+      "deploy": {
+        "startCommand": "uvicorn server:app --host 0.0.0.0 --port $PORT",
+        "healthcheckPath": "/api/health"
+      }
+    }
+  }
+}
