@@ -60,8 +60,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('kdm_token');
-    localStorage.removeItem('kdm_user');
+    localStorage.removeItem('xtrix_token');
+    localStorage.removeItem('xtrix_user');
     setToken(null);
     setUser(null);
   };
