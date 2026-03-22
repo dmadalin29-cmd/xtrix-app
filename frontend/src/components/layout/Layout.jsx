@@ -64,7 +64,7 @@ const Sidebar = () => {
   };
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[280px] z-40 flex flex-col border-r border-white/[0.06]" style={{ background: 'rgba(5,5,10,0.95)', backdropFilter: 'blur(40px)' }}>
+    <aside className="fixed left-0 top-0 bottom-0 w-[280px] z-40 flex-col border-r border-white/[0.06] hidden lg:flex" style={{ background: 'rgba(5,5,10,0.95)', backdropFilter: 'blur(40px)' }}>
       {/* Logo */}
       <div className="px-6 py-5 flex items-center gap-3 cursor-pointer" onClick={() => navigate('/')}>
         <div className="w-10 h-10 rounded-xl flex items-center justify-center relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #ff0050, #ff3366)' }}>
@@ -171,9 +171,17 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
   }, [isAuthenticated]);
 
   return (
-    <header className="fixed top-0 left-[280px] right-0 h-16 z-50 flex items-center justify-between px-6" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(30px)' }}>
+    <header className="fixed top-0 left-0 lg:left-[280px] right-0 h-16 z-50 flex items-center justify-between px-4 lg:px-6" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(30px)' }}>
+      {/* Logo on Mobile */}
+      <div className="lg:hidden flex items-center gap-2" onClick={() => navigate('/')}>
+        <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #ff0050, #ff3366)' }}>
+          <Sparkles className="w-4 h-4 text-white" />
+        </div>
+        <span className="text-lg font-bold text-white">KdM</span>
+      </div>
+      
       {/* Search */}
-      <div className="flex-1 max-w-[460px]">
+      <div className="flex-1 max-w-[460px] mx-4 lg:mx-0">
         <motion.div
           animate={{
             borderColor: searchFocused ? 'rgba(255,0,80,0.3)' : 'rgba(255,255,255,0.06)',
@@ -181,7 +189,7 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
           }}
           className="relative rounded-full border overflow-hidden" style={{ background: 'rgba(255,255,255,0.04)' }}
         >
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+          <Search className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
           <input
             type="text"
             placeholder="Search KdM..."
@@ -190,7 +198,7 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
             onKeyDown={(e) => { if (e.key === 'Enter' && searchQuery.trim()) navigate(`/discover?q=${searchQuery}`); }}
-            className="w-full bg-transparent text-sm text-white placeholder-white/30 pl-11 pr-4 py-2.5 outline-none"
+            className="w-full bg-transparent text-sm text-white placeholder-white/30 pl-9 lg:pl-11 pr-4 py-2 lg:py-2.5 outline-none"
           />
           {searchQuery && (
             <motion.button
@@ -215,11 +223,11 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowWalletModal(true)}
-                  className="relative flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white border border-[#FFD700]/20 hover:border-[#FFD700]/40 transition-colors"
+                  className="relative flex items-center gap-2 px-3 lg:px-4 py-2 rounded-full text-sm font-semibold text-white border border-[#FFD700]/20 hover:border-[#FFD700]/40 transition-colors"
                   style={{ background: 'rgba(255,215,0,0.06)' }}
                 >
                   <Coins className="w-4 h-4 text-[#FFD700]" />
-                  <span className="text-[#FFD700]">{user?.walletBalance || 0}</span>
+                  <span className="text-[#FFD700] hidden sm:inline">{user?.walletBalance || 0}</span>
                 </motion.button>
               </TooltipTrigger>
               <TooltipContent><p>Portofel</p></TooltipContent>
@@ -234,10 +242,10 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => requireAuth(() => navigate('/upload'))}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold text-white border border-white/10 hover:border-[#ff0050]/40 transition-colors" style={{ background: 'rgba(255,255,255,0.04)' }}
+                className="items-center gap-2 px-3 lg:px-4 py-2 rounded-full text-sm font-semibold text-white border border-white/10 hover:border-[#ff0050]/40 transition-colors hidden sm:flex" style={{ background: 'rgba(255,255,255,0.04)' }}
               >
                 <Plus className="w-4 h-4" />
-                Upload
+                <span className="hidden lg:inline">Upload</span>
               </motion.button>
             </TooltipTrigger>
             <TooltipContent><p>Upload video</p></TooltipContent>
@@ -246,13 +254,13 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
 
         {isAuthenticated ? (
           <>
-            {/* Notifications */}
+            {/* Notifications - Hide bell on very small screens */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/[0.05] transition-colors"
+                  className="relative w-10 h-10 rounded-full items-center justify-center hover:bg-white/[0.05] transition-colors hidden sm:flex"
                 >
                   <Bell className="w-5 h-5 text-white/60" />
                   {notifications.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#ff0050]" />}
@@ -282,11 +290,11 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Messages */}
+            {/* Messages - Hide on mobile */}
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/[0.05] transition-colors"
+              className="w-10 h-10 rounded-full items-center justify-center hover:bg-white/[0.05] transition-colors hidden sm:flex"
             >
               <MessageCircle className="w-5 h-5 text-white/60" />
             </motion.button>
@@ -323,7 +331,7 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowAuthModal(true)}
-            className="px-6 py-2 rounded-full text-sm font-bold text-white"
+            className="px-4 lg:px-6 py-2 rounded-full text-sm font-bold text-white"
             style={{ background: '#ff0050', boxShadow: '0 0 20px rgba(255,0,80,0.3)' }}
           >
             Sign In
@@ -336,6 +344,25 @@ const Header = ({ showWalletModal, setShowWalletModal }) => {
 
 const Layout = ({ children }) => {
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { requireAuth } = useAuth();
+
+  const mobileNavItems = [
+    { path: '/', label: 'For You', icon: Home },
+    { path: '/discover', label: 'Discover', icon: Compass },
+    { path: '/live', label: 'LIVE', icon: Radio },
+    { path: '/upload', label: 'Upload', icon: Plus },
+    { path: '/profile', label: 'Profile', icon: User },
+  ];
+
+  const handleMobileNav = (path) => {
+    if (path === '/upload' || path === '/profile') {
+      requireAuth(() => navigate(path));
+    } else {
+      navigate(path);
+    }
+  };
 
   return (
     <div className="h-screen overflow-hidden relative noise-overlay">
@@ -345,9 +372,45 @@ const Layout = ({ children }) => {
 
       <Sidebar />
       <Header showWalletModal={showWalletModal} setShowWalletModal={setShowWalletModal} />
-      <main className="ml-[280px] mt-16 h-[calc(100vh-64px)] overflow-y-auto relative z-10">
+      
+      {/* Main Content - responsive margin */}
+      <main className="lg:ml-[280px] mt-16 pb-20 lg:pb-0 h-[calc(100vh-64px)] lg:h-[calc(100vh-64px)] overflow-y-auto relative z-10">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation - only visible on < lg (1024px) */}
+      <nav className="fixed bottom-0 left-0 right-0 h-16 z-50 flex items-center justify-around lg:hidden border-t border-white/[0.08]" style={{ background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(40px)' }}>
+        {mobileNavItems.map((item) => {
+          const isActive = location.pathname === item.path;
+          const Icon = item.icon;
+          return (
+            <motion.button
+              key={item.path}
+              whileTap={{ scale: 0.9 }}
+              onClick={() => handleMobileNav(item.path)}
+              className="flex flex-col items-center justify-center gap-1 flex-1 h-full relative"
+            >
+              <Icon 
+                className={`w-6 h-6 ${isActive ? 'text-[#ff0050]' : 'text-white/50'}`} 
+                strokeWidth={isActive ? 2.5 : 1.5}
+              />
+              <span className={`text-[10px] font-medium ${isActive ? 'text-[#ff0050]' : 'text-white/40'}`}>
+                {item.label}
+              </span>
+              {isActive && (
+                <motion.div
+                  layoutId="mobile-nav-indicator"
+                  className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 rounded-full"
+                  style={{ background: '#ff0050' }}
+                />
+              )}
+              {item.path === '/live' && (
+                <span className="absolute top-2 right-[calc(50%-16px)] w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+              )}
+            </motion.button>
+          );
+        })}
+      </nav>
 
       {/* Wallet Modal */}
       <WalletModal open={showWalletModal} onClose={() => setShowWalletModal(false)} />
