@@ -9,6 +9,11 @@ RUN apt-get update && apt-get install -y \
 
 # Copy backend requirements
 COPY backend/requirements.txt .
+
+# Install emergentintegrations with custom index FIRST
+RUN pip install --no-cache-dir emergentintegrations --extra-index-url https://d33sy5i8bnduwe.cloudfront.net/simple/
+
+# Install all other requirements
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy backend code
