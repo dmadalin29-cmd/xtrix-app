@@ -147,16 +147,46 @@ async def get_feed(page: int = Query(1, ge=1), limit: int = Query(10, le=30), us
     has_more = len(docs) > limit
     docs = docs[:limit]
     
+    # Batch fetch likes and bookmarks for current user (N+1 fix)
+    video_ids = [doc["_id"] for doc in docs]
+    liked_set = set()
+    bookmarked_set = set()
+    if user_id:
+        liked_docs = await db.likes.find({"userId": user_id, "videoId": {"$in": video_ids}}).to_list(limit)
+        liked_set = {l["videoId"] for l in liked_docs}
+        bookmarked_docs = await db.bookmarks.find({"userId": user_id, "videoId": {"$in": video_ids}}).to_list(limit)
+        bookmarked_set = {b["videoId"] for b in bookmarked_docs}
+    
+    # Batch fetch all users (N+1 fix)
+    user_ids = [doc.get("userId") for doc in docs if doc.get("userId")]
+    users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     videos = []
     for doc in docs:
-        v = await video_doc_to_response(doc)
-        # Check if current user liked/bookmarked
+        video_user_id = doc.get("userId", "")
+        user_data = user_map.get(video_user_id, {})
+        video = {
+            "id": doc["_id"],
+            "user": user_data,
+            "description": doc.get("caption", ""),
+            "music": doc.get("music", "Original Sound"),
+            "likes": doc.get("likes", 0),
+            "comments": doc.get("commentCount", 0),
+            "shares": doc.get("shares", 0),
+            "bookmarks": doc.get("bookmarks", 0),
+            "views": doc.get("views", 0),
+            "videoUrl": doc.get("videoUrl", ""),
+            "thumbnail": doc.get("thumbnail", ""),
+            "hashtags": doc.get("hashtags", []),
+            "visibility": doc.get("visibility", "public"),
+            "allowComments": doc.get("allowComments", True),
+            "createdAt": time_ago(doc.get("createdAt", "")),
+        }
         if user_id:
-            liked = await db.likes.find_one({"userId": user_id, "videoId": doc["_id"]})
-            bookmarked = await db.bookmarks.find_one({"userId": user_id, "videoId": doc["_id"]})
-            v["isLiked"] = liked is not None
-            v["isBookmarked"] = bookmarked is not None
-        videos.append(v)
+            video["isLiked"] = doc["_id"] in liked_set
+            video["isBookmarked"] = doc["_id"] in bookmarked_set
+        videos.append(video)
     return {"videos": videos, "hasMore": has_more}
 
 
@@ -171,14 +201,43 @@ async def get_following_feed(page: int = Query(1, ge=1), limit: int = Query(10, 
     docs = await cursor.to_list(limit + 1)
     has_more = len(docs) > limit
     docs = docs[:limit]
+    
+    # Batch fetch likes and bookmarks (N+1 fix)
+    video_ids = [doc["_id"] for doc in docs]
+    liked_docs = await db.likes.find({"userId": user_id, "videoId": {"$in": video_ids}}).to_list(limit)
+    liked_set = {l["videoId"] for l in liked_docs}
+    bookmarked_docs = await db.bookmarks.find({"userId": user_id, "videoId": {"$in": video_ids}}).to_list(limit)
+    bookmarked_set = {b["videoId"] for b in bookmarked_docs}
+    
+    # Batch fetch all users (N+1 fix)
+    user_ids = [doc.get("userId") for doc in docs if doc.get("userId")]
+    users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     videos = []
     for doc in docs:
-        v = await video_doc_to_response(doc)
-        liked = await db.likes.find_one({"userId": user_id, "videoId": doc["_id"]})
-        bookmarked = await db.bookmarks.find_one({"userId": user_id, "videoId": doc["_id"]})
-        v["isLiked"] = liked is not None
-        v["isBookmarked"] = bookmarked is not None
-        videos.append(v)
+        video_user_id = doc.get("userId", "")
+        user_data = user_map.get(video_user_id, {})
+        video = {
+            "id": doc["_id"],
+            "user": user_data,
+            "description": doc.get("caption", ""),
+            "music": doc.get("music", "Original Sound"),
+            "likes": doc.get("likes", 0),
+            "comments": doc.get("commentCount", 0),
+            "shares": doc.get("shares", 0),
+            "bookmarks": doc.get("bookmarks", 0),
+            "views": doc.get("views", 0),
+            "videoUrl": doc.get("videoUrl", ""),
+            "thumbnail": doc.get("thumbnail", ""),
+            "hashtags": doc.get("hashtags", []),
+            "visibility": doc.get("visibility", "public"),
+            "allowComments": doc.get("allowComments", True),
+            "createdAt": time_ago(doc.get("createdAt", "")),
+            "isLiked": doc["_id"] in liked_set,
+            "isBookmarked": doc["_id"] in bookmarked_set,
+        }
+        videos.append(video)
     return {"videos": videos, "hasMore": has_more}
 
 
@@ -342,12 +401,19 @@ async def get_comments(video_id: str, page: int = Query(1, ge=1), limit: int = Q
     skip = (page - 1) * limit
     total = await db.comments.count_documents({"videoId": video_id})
     docs = await db.comments.find({"videoId": video_id}).sort("createdAt", -1).skip(skip).limit(limit).to_list(limit)
+    
+    # Batch fetch all comment users (N+1 fix)
+    user_ids = [doc["userId"] for doc in docs if doc.get("userId")]
+    users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     comments = []
     for doc in docs:
-        user = await db.users.find_one({"_id": doc["userId"]})
+        comment_user_id = doc.get("userId", "")
+        user_data = user_map.get(comment_user_id, {})
         comments.append({
             "id": doc["_id"],
-            "user": user_doc_to_response(user).dict() if user else {},
+            "user": user_data,
             "text": doc.get("text", ""),
             "likes": doc.get("likes", 0),
             "time": time_ago(doc.get("createdAt", "")),
@@ -406,12 +472,19 @@ async def get_replies(comment_id: str, page: int = Query(1, ge=1), limit: int = 
     skip = (page - 1) * limit
     total = await db.comment_replies.count_documents({"parentId": comment_id})
     docs = await db.comment_replies.find({"parentId": comment_id}).sort("createdAt", 1).skip(skip).limit(limit).to_list(limit)
+    
+    # Batch fetch all reply users (N+1 fix)
+    user_ids = [doc["userId"] for doc in docs if doc.get("userId")]
+    users_list = await db.users.find({"_id": {"$in": user_ids}}, {"_id": 0}).to_list(len(user_ids))
+    user_map = {u.get("id", ""): u for u in users_list}
+    
     replies = []
     for doc in docs:
-        user = await db.users.find_one({"_id": doc["userId"]})
+        reply_user_id = doc.get("userId", "")
+        user_data = user_map.get(reply_user_id, {})
         replies.append({
             "id": doc["_id"],
-            "user": user_doc_to_response(user).dict() if user else {},
+            "user": user_data,
             "text": doc.get("text", ""),
             "likes": doc.get("likes", 0),
             "time": time_ago(doc.get("createdAt", "")),
