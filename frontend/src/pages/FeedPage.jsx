@@ -598,8 +598,8 @@ const FeedPage = ({ following: isFollowing }) => {
         )}
       </div>
 
-      {/* Navigation arrows */}
-      <div className="fixed right-8 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-30">
+      {/* Navigation arrows - DESKTOP ONLY */}
+      <div className="fixed right-8 top-1/2 -translate-y-1/2 flex-col gap-2 z-30 hidden lg:flex">
         <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => scrollToIndex(Math.max(0, activeIndex - 1))} disabled={activeIndex === 0} className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-20 transition-opacity" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(10px)' }}>
           <ChevronUp className="w-5 h-5 text-white/70" />
         </motion.button>

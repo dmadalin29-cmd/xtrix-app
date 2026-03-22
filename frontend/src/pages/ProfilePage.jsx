@@ -94,9 +94,9 @@ const ProfilePage = () => {
   const allVideos = userVideos.length > 0 ? userVideos : mockVideos.slice(0, 6);
 
   return (
-    <div className="max-w-[900px] mx-auto px-6 py-8">
+    <div className="max-w-[900px] mx-auto px-4 lg:px-6 py-6 lg:py-8">
       {/* Profile Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-8">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-6 lg:mb-8">
         {/* Banner */}
         <div className="h-48 rounded-2xl overflow-hidden relative" style={{ background: 'linear-gradient(135deg, rgba(255,0,80,0.15), rgba(0,245,212,0.1), rgba(100,50,200,0.1))' }}>
           <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.3)', backdropFilter: 'blur(60px)' }} />

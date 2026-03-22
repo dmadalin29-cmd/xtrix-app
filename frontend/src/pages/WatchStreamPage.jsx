@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Eye, Heart, MessageCircle, Gift, Loader2 } from 'lucide-react';
+import { X, Eye, Heart, Share2, Gift, Send, ChevronDown, UserPlus, Coins } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { liveAPI, giftsAPI } from '../services/api';
@@ -34,168 +34,157 @@ const FlyingGift = ({ gift, onComplete }) => {
         <motion.div animate={{ scale: [1, 1.3, 1], opacity: [0.8, 0.4, 0.8] }} transition={{ duration: 1, repeat: Infinity, ease: "easeInOut", delay: 0.3 }} className="absolute -bottom-4 -left-4 text-2xl">✨</motion.div>
       </div>
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: [0, 1, 1, 0], y: [10, 0, -5, -10] }} transition={{ duration: 2.5 }} className="absolute -bottom-12 left-1/2 -translate-x-1/2 text-center whitespace-nowrap">
-        <p className="text-xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,215,0,0.8)]">{gift.name}</p>
-        <p className="text-sm font-semibold text-[#FFD700] drop-shadow-[0_0_6px_rgba(255,215,0,0.6)]">{gift.cost} coins</p>
+        <p className="text-xl font-bold text-white drop-shadow-[0_0_8px_rgba(255,215,0,0.8)] font-display">{gift.name}</p>
+        <p className="text-sm font-semibold text-[#FFD700] drop-shadow-[0_0_6px_rgba(255,215,0,0.6)] font-body">{gift.cost} coins</p>
       </motion.div>
     </motion.div>
   );
 };
 
-// Live Chat Component
-const LiveChat = ({ streamId }) => {
-  const [messages, setMessages] = useState([
-    { id: '1', user: { username: 'finaltest', avatar: '' }, text: 'Test message', timestamp: new Date() },
-    { id: '2', user: { username: 'modalinofficial', avatar: '' }, text: 'pim', timestamp: new Date() }
-  ]);
-  const [input, setInput] = useState('');
-
-  const sendMessage = () => {
-    if (!input.trim()) return;
-    setMessages(prev => [...prev, {
-      id: Date.now().toString(),
-      user: { username: 'You', avatar: '' },
-      text: input,
-      timestamp: new Date()
-    }]);
-    setInput('');
-  };
-
+// Gift Drawer (Bottom Sheet)
+const GiftDrawer = ({ isOpen, onClose, gifts, userBalance, onSend }) => {
   return (
-    <div className="flex-1 flex flex-col">
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {messages.map((msg) => (
-          <div key={msg.id} className="flex items-start gap-2">
-            <Avatar className="w-7 h-7 flex-shrink-0">
-              <AvatarImage src={msg.user.avatar} />
-              <AvatarFallback>{msg.user.username[0]}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="text-xs text-white/90 font-semibold font-body">{msg.user.username}</p>
-              <p className="text-sm text-white/70 font-body">{msg.text}</p>
-            </div>
-          </div>
-        ))}
-        {messages.length === 0 && (
-          <div className="text-center py-8">
-            <p className="text-sm text-white/30 font-body">Fii primul care trimite un mesaj!</p>
-          </div>
-        )}
-      </div>
-      <div className="p-4 border-t border-white/[0.08]">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-            placeholder="Scrie un mesaj..."
-            className="flex-1 bg-white/[0.05] rounded-xl px-4 py-2.5 text-sm text-white placeholder-white/30 outline-none border border-white/[0.08] focus:border-[#ff0050]/40 font-body"
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-black/60 z-[150]"
           />
-          <button onClick={sendMessage} className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: '#ff0050' }}>
-            <Heart className="w-5 h-5 text-white fill-white" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
+          
+          {/* Drawer */}
+          <motion.div
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="fixed bottom-0 left-0 right-0 rounded-t-[32px] overflow-hidden z-[160]"
+            style={{ 
+              height: '65vh',
+              background: 'rgba(15,15,25,0.98)', 
+              backdropFilter: 'blur(40px)',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderBottom: 'none'
+            }}
+          >
+            {/* Header */}
+            <div className="px-6 py-4 flex items-center justify-between border-b border-white/[0.08]">
+              <div>
+                <h3 className="text-xl font-bold text-white font-display">Trimite Cadou</h3>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Coins className="w-4 h-4 text-[#FFD700]" />
+                  <span className="text-sm font-semibold text-[#FFD700] font-body">{userBalance} coins</span>
+                </div>
+              </div>
+              <button 
+                onClick={onClose}
+                className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5 text-white/60" />
+              </button>
+            </div>
 
-// Gift Panel Component
-const GiftPanel = ({ gifts, onSend }) => {
-  const { user } = useAuth();
-
-  return (
-    <div className="flex-1 overflow-y-auto p-5 flex flex-col">
-      <div className="mb-4 p-4 rounded-xl" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)' }}>
-        <p className="text-xs text-white/50 mb-1 font-body">Soldul tău:</p>
-        <p className="text-2xl font-bold text-white font-display">{user?.walletBalance || 0} <span className="text-sm text-white/40 font-body">coins</span></p>
-      </div>
-
-      {gifts && gifts.length > 0 ? (
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {gifts.map((gift) => (
-            <motion.button
-              key={gift._id}
-              whileHover={{ scale: 1.08, y: -4 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => onSend(gift)}
-              className="p-4 rounded-xl text-center transition-all"
-              style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-            >
-              <div className="text-3xl mb-2">{gift.icon}</div>
-              <p className="text-xs text-white/90 font-medium mb-1 font-body">{gift.name}</p>
-              <p className="text-sm font-bold text-[#FFD700] font-display">{gift.cost}</p>
-            </motion.button>
-          ))}
-        </div>
-      ) : (
-        <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
-        </div>
+            {/* Gifts Grid */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-4 gap-3">
+                {gifts.map((gift) => (
+                  <motion.button
+                    key={gift._id}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => onSend(gift)}
+                    className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-white/[0.06] hover:border-[#FFD700]/40 transition-all"
+                    style={{ background: 'rgba(255,255,255,0.02)' }}
+                    data-testid={`gift-button-${gift._id}`}
+                  >
+                    <div className="text-4xl">{gift.icon}</div>
+                    <p className="text-xs font-medium text-white/80 text-center font-body truncate w-full">{gift.name}</p>
+                    <div className="flex items-center gap-1">
+                      <Coins className="w-3 h-3 text-[#FFD700]" />
+                      <span className="text-xs font-bold text-[#FFD700] font-body">{gift.cost}</span>
+                    </div>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        </>
       )}
-
-      <div className="mt-auto p-4 rounded-xl" style={{ background: 'rgba(255,0,80,0.08)', border: '1px solid rgba(255,0,80,0.25)' }}>
-        <p className="text-xs text-white/60 font-body text-center">💡 Cadourile trimise susțin creatorii! Creatorii primesc 70% din valoare.</p>
-      </div>
-    </div>
+    </AnimatePresence>
   );
 };
 
-// Main WatchStreamPage Component
 const WatchStreamPage = () => {
   const { streamId } = useParams();
   const navigate = useNavigate();
-  const { user, requireAuth } = useAuth();
+  const { user, isAuthenticated, requireAuth } = useAuth();
   const videoRef = useRef(null);
   const hlsRef = useRef(null);
-
+  const chatEndRef = useRef(null);
+  
   const [stream, setStream] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showGifts, setShowGifts] = useState(false);
+  const [currentViewers, setCurrentViewers] = useState(0);
   const [gifts, setGifts] = useState([]);
   const [flyingGifts, setFlyingGifts] = useState([]);
-  const [currentViewers, setCurrentViewers] = useState(0);
+  const [showGiftDrawer, setShowGiftDrawer] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [isChatCollapsed, setIsChatCollapsed] = useState(false);
 
   useEffect(() => {
-    fetchStreamData();
+    const fetchStream = async () => {
+      try {
+        const res = await liveAPI.getActiveStreams();
+        const foundStream = res.data.find(s => s.id === streamId);
+        if (foundStream) {
+          setStream(foundStream);
+          setCurrentViewers(foundStream.currentViewers || 0);
+          if (foundStream.hlsUrl) {
+            initializePlayer(foundStream.hlsUrl);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch stream');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchGifts = async () => {
+      try {
+        const res = await giftsAPI.getAll();
+        setGifts(res.data || []);
+      } catch (err) {
+        console.error('Failed to load gifts');
+      }
+    };
+
+    fetchStream();
     fetchGifts();
+
+    // Mock chat messages for demo
+    setChatMessages([
+      { id: '1', user: { username: 'viewer1', avatar: '' }, text: 'Super stream! 🔥', timestamp: new Date() },
+      { id: '2', user: { username: 'fan_kdm', avatar: '' }, text: 'Salut! Cum merge?', timestamp: new Date() },
+      { id: '3', user: { username: 'creator_bella', avatar: '' }, text: 'Mulțumesc pentru suport! ❤️', timestamp: new Date() }
+    ]);
   }, [streamId]);
 
-  const fetchStreamData = async () => {
-    try {
-      const res = await liveAPI.getActiveStreams();
-      const foundStream = res.data.find(s => s.id === streamId);
-      if (foundStream) {
-        setStream(foundStream);
-        setCurrentViewers(foundStream.viewers);
-        initializePlayer(foundStream.hlsUrl);
-      } else {
-        alert('Stream not found');
-        navigate('/live');
-      }
-    } catch (err) {
-      console.error('Failed to fetch stream:', err);
-      navigate('/live');
-    } finally {
-      setLoading(false);
+  useEffect(() => {
+    if (chatEndRef.current && !isChatCollapsed) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
-  };
-
-  const fetchGifts = async () => {
-    try {
-      const res = await giftsAPI.getAll();
-      setGifts(res.data);
-    } catch (err) {
-      console.error('Failed to fetch gifts:', err);
-    }
-  };
+  }, [chatMessages, isChatCollapsed]);
 
   const initializePlayer = (hlsUrl) => {
     if (!videoRef.current) return;
     
-    // Skip if no HLS URL (stream may not be fully started yet)
     if (!hlsUrl) {
-      console.log('No HLS URL yet, stream may still be initializing');
+      console.log('No HLS URL yet');
       return;
     }
 
@@ -231,10 +220,27 @@ const WatchStreamPage = () => {
         setTimeout(() => {
           setFlyingGifts(prev => prev.filter(g => g.animationId !== giftId));
         }, 2600);
+        
+        // Close drawer
+        setShowGiftDrawer(false);
       } catch (err) {
         alert(err.response?.data?.detail || 'Eroare la trimiterea cadoului');
       }
     });
+  };
+
+  const sendMessage = (e) => {
+    e.preventDefault();
+    if (!chatInput.trim() || !isAuthenticated) return;
+    
+    const newMsg = {
+      id: Date.now().toString(),
+      user: { username: user?.username || 'You', avatar: user?.avatar },
+      text: chatInput,
+      timestamp: new Date()
+    };
+    setChatMessages(prev => [...prev, newMsg]);
+    setChatInput('');
   };
 
   useEffect(() => {
@@ -248,7 +254,10 @@ const WatchStreamPage = () => {
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
-        <Loader2 className="w-12 h-12 text-[#ff0050] animate-spin" />
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-white/10 border-t-[#ff0050] rounded-full animate-spin" />
+          <p className="text-white/60 font-body">Loading stream...</p>
+        </div>
       </div>
     );
   }
@@ -256,7 +265,16 @@ const WatchStreamPage = () => {
   if (!stream) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
-        <p className="text-white font-body">Stream not found</p>
+        <div className="text-center">
+          <p className="text-xl text-white/80 font-body mb-4">Stream not found</p>
+          <button 
+            onClick={() => navigate('/live')}
+            className="px-6 py-3 rounded-full text-sm font-bold text-white font-body"
+            style={{ background: '#ff0050' }}
+          >
+            Back to LIVE
+          </button>
+        </div>
       </div>
     );
   }
@@ -270,101 +288,242 @@ const WatchStreamPage = () => {
         ))}
       </AnimatePresence>
 
-      {/* Close Button */}
-      <button 
-        onClick={() => navigate('/live')} 
-        className="absolute top-6 right-6 w-12 h-12 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors z-[100]"
-        style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}
+      {/* Full-Screen Video Background */}
+      <video 
+        ref={videoRef} 
+        autoPlay 
+        playsInline 
+        muted={false}
+        className="absolute inset-0 w-full h-full object-cover"
+        style={{ zIndex: 0 }}
+      />
+
+      {/* Placeholder when stream initializing */}
+      {!stream.hlsUrl && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900/50 via-pink-900/50 to-black z-[1]">
+          <div className="text-center">
+            <div className="w-16 h-16 border-4 border-white/10 border-t-[#ff0050] rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-white/80 text-lg font-body">Stream-ul se pregătește...</p>
+            <p className="text-white/40 text-sm font-body mt-2">Așteaptă câteva secunde</p>
+          </div>
+        </div>
+      )}
+
+      {/* Top Gradient Overlay */}
+      <div className="absolute top-0 left-0 right-0 h-32 pointer-events-none z-[5]" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)' }} />
+
+      {/* Bottom Gradient Overlay */}
+      <div className="absolute bottom-0 left-0 right-0 h-64 pointer-events-none z-[5]" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)' }} />
+
+      {/* TOP BAR - Broadcaster Info */}
+      <div className="absolute top-0 left-0 right-0 z-[90] px-4 pt-safe pt-4 pb-2 flex items-center justify-between">
+        {/* Left: Broadcaster */}
+        <div className="flex items-center gap-3">
+          <Avatar className="w-10 h-10 ring-2 ring-white/30">
+            <AvatarImage src={stream.user?.avatar} />
+            <AvatarFallback>{(stream.user?.username || 'U')[0]}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm font-bold text-white font-display" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>{stream.user?.username}</p>
+            <p className="text-xs text-white/70 font-body" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.8)' }}>{stream.title}</p>
+          </div>
+          <motion.button
+            whileTap={{ scale: 0.9 }}
+            className="px-4 py-1.5 rounded-full text-xs font-bold text-white font-body"
+            style={{ background: '#ff0050' }}
+            data-testid="follow-broadcaster-btn"
+          >
+            <UserPlus className="w-3.5 h-3.5 inline mr-1" />
+            Follow
+          </motion.button>
+        </div>
+
+        {/* Right: Viewers + Close */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md" style={{ background: 'rgba(255,0,80,0.9)' }}>
+            <Eye className="w-4 h-4 text-white" />
+            <span className="text-xs font-bold text-white font-body">{currentViewers}</span>
+          </div>
+          <button 
+            onClick={() => navigate('/live')}
+            className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md hover:bg-white/20 transition-colors"
+            style={{ background: 'rgba(0,0,0,0.4)' }}
+            data-testid="close-stream-btn"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      {/* CHAT OVERLAY - Bottom Left */}
+      <AnimatePresence>
+        {!isChatCollapsed && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="absolute bottom-24 left-4 w-[70%] max-w-sm z-[80]"
+            style={{
+              maxHeight: '35vh',
+              maskImage: 'linear-gradient(to bottom, transparent 0%, black 15%, black 100%)'
+            }}
+          >
+            <div className="overflow-y-auto space-y-2 pb-2">
+              {chatMessages.map((msg, i) => (
+                <motion.div
+                  key={msg.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="flex flex-col"
+                >
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-white font-body" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.95)' }}>
+                      {msg.user.username}
+                    </span>
+                  </div>
+                  <p className="text-sm text-white/90 font-body leading-snug" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.95)' }}>
+                    {msg.text}
+                  </p>
+                </motion.div>
+              ))}
+              <div ref={chatEndRef} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toggle Chat Button (when collapsed) */}
+      {isChatCollapsed && (
+        <motion.button
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          onClick={() => setIsChatCollapsed(false)}
+          className="absolute bottom-24 left-4 w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md z-[80]"
+          style={{ background: 'rgba(255,0,80,0.9)' }}
+        >
+          <ChevronDown className="w-5 h-5 text-white rotate-180" />
+        </motion.button>
+      )}
+
+      {/* Chat Input - Bottom Left */}
+      <form 
+        onSubmit={sendMessage}
+        className="absolute bottom-4 left-4 w-[70%] max-w-sm z-[85] flex items-center gap-2"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
-        <X className="w-6 h-6 text-white" />
-      </button>
-
-      {/* Main Layout: 70% Video + 30% Chat/Gifts */}
-      <div className="w-full h-full flex">
+        <input
+          type="text"
+          value={chatInput}
+          onChange={(e) => setChatInput(e.target.value)}
+          placeholder={isAuthenticated ? "Spune ceva..." : "Loghează-te..."}
+          disabled={!isAuthenticated}
+          className="flex-1 px-4 py-2.5 rounded-full text-sm text-white placeholder-white/40 outline-none border border-white/[0.15] backdrop-blur-xl font-body disabled:opacity-50"
+          style={{ background: 'rgba(255,255,255,0.08)' }}
+          data-testid="chat-input"
+        />
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          type="submit"
+          disabled={!chatInput.trim() || !isAuthenticated}
+          className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-30"
+          style={{ background: chatInput.trim() && isAuthenticated ? '#ff0050' : 'rgba(255,255,255,0.1)' }}
+          data-testid="send-chat-btn"
+        >
+          <Send className="w-4 h-4 text-white" />
+        </motion.button>
         
-        {/* LEFT: Video Player (70%) */}
-        <div className="w-[70%] flex flex-col p-8 pr-4">
-          {/* Video Container */}
-          <div className="flex-1 rounded-3xl overflow-hidden relative" style={{ background: 'rgba(20,20,30,0.95)', border: '1px solid rgba(255,255,255,0.12)' }}>
-            <video ref={videoRef} autoPlay playsInline controls className="w-full h-full object-contain" />
-            
-            {/* Placeholder when stream is initializing */}
-            {!stream.hlsUrl && (
-              <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-purple-900/50 via-pink-900/50 to-black">
-                <div className="text-center">
-                  <Loader2 className="w-16 h-16 text-[#ff0050] animate-spin mx-auto mb-4" />
-                  <p className="text-white/80 text-lg font-body">Stream-ul se pregătește...</p>
-                  <p className="text-white/40 text-sm font-body mt-2">Așteaptă câteva secunde</p>
-                </div>
-              </div>
-            )}
-            
-            {/* Live Badge */}
-            <div className="absolute top-4 left-4 flex items-center gap-2 z-10">
-              <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-white font-body" style={{ background: '#ff0050' }}>
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse" /> LIVE
-              </span>
-              <span className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-white/80 font-body" style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)' }}>
-                <Eye className="w-3.5 h-3.5" /> {currentViewers}
-              </span>
-            </div>
-          </div>
+        {/* Collapse Chat Button */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          type="button"
+          onClick={() => setIsChatCollapsed(!isChatCollapsed)}
+          className="w-10 h-10 rounded-full flex items-center justify-center backdrop-blur-md"
+          style={{ background: 'rgba(0,0,0,0.4)' }}
+        >
+          <ChevronDown className={`w-4 h-4 text-white transition-transform ${isChatCollapsed ? 'rotate-180' : ''}`} />
+        </motion.button>
+      </form>
 
-          {/* Stream Info Bar */}
-          <div className="mt-4 p-5 rounded-2xl flex items-center justify-between" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <div className="flex items-center gap-3">
-              <Avatar className="w-12 h-12 ring-2 ring-[#ff0050]/30">
-                <AvatarImage src={stream.user?.avatar} />
-                <AvatarFallback>{(stream.user?.username || 'U')[0]}</AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-base font-bold text-white font-display">{stream.user?.username}</p>
-                <p className="text-sm text-white/50 font-body">{stream.title}</p>
-              </div>
-            </div>
-            <motion.button 
-              whileHover={{ scale: 1.05 }} 
-              whileTap={{ scale: 0.95 }}
-              className="px-6 py-2.5 rounded-full text-sm font-bold text-white font-body" 
-              style={{ background: '#ff0050' }}
-            >
-              Follow
-            </motion.button>
-          </div>
-        </div>
+      {/* ACTION STACK - Bottom Right */}
+      <div className="absolute bottom-28 right-4 z-[90] flex flex-col items-center gap-4" style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+        {/* Creator Profile */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => navigate(`/profile/${stream.user?.username}`)}
+          className="relative"
+          data-testid="creator-profile-btn"
+        >
+          <Avatar className="w-12 h-12 ring-4 ring-white/40">
+            <AvatarImage src={stream.user?.avatar} />
+            <AvatarFallback>{(stream.user?.username || 'U')[0]}</AvatarFallback>
+          </Avatar>
+        </motion.button>
 
-        {/* RIGHT: Chat & Gifts Sidebar (30%) */}
-        <div className="w-[30%] flex flex-col p-8 pl-4">
-          <div className="h-full flex flex-col rounded-3xl overflow-hidden" style={{ background: 'rgba(18,18,28,0.98)', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 0 60px rgba(255,0,80,0.15)' }}>
-            
-            {/* TABS - LARGE AND CLEAR */}
-            <div className="flex border-b border-white/[0.2] bg-black/40 flex-shrink-0">
-              <button
-                onClick={() => setShowGifts(false)}
-                className={`flex-1 py-6 text-lg font-bold transition-all font-display flex items-center justify-center gap-3 ${!showGifts ? 'text-white bg-[#ff0050]/15 border-b-4 border-[#ff0050]' : 'text-white/40 hover:text-white/70 hover:bg-white/[0.03]'}`}
-              >
-                <MessageCircle className="w-6 h-6" />
-                Chat
-              </button>
-              <button
-                onClick={() => setShowGifts(true)}
-                className={`flex-1 py-6 text-lg font-bold transition-all font-display flex items-center justify-center gap-3 ${showGifts ? 'text-white bg-[#ff0050]/15 border-b-4 border-[#ff0050]' : 'text-white/40 hover:text-white/70 hover:bg-white/[0.03]'}`}
-              >
-                <Gift className="w-6 h-6" />
-                Cadouri
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 overflow-hidden">
-              {!showGifts ? (
-                <LiveChat streamId={stream.id} />
-              ) : (
-                <GiftPanel gifts={gifts} onSend={sendGift} />
-              )}
-            </div>
+        {/* Like Button */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          className="flex flex-col items-center gap-1"
+          data-testid="like-stream-btn"
+        >
+          <div className="w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.3)' }}>
+            <Heart className="w-6 h-6 text-white" />
           </div>
-        </div>
+          <span className="text-xs font-bold text-white font-body" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}>
+            {stream.likes || 0}
+          </span>
+        </motion.button>
+
+        {/* Share Button */}
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          className="flex flex-col items-center gap-1"
+          data-testid="share-stream-btn"
+        >
+          <div className="w-12 h-12 rounded-full flex items-center justify-center backdrop-blur-md" style={{ background: 'rgba(0,0,0,0.3)' }}>
+            <Share2 className="w-6 h-6 text-white" />
+          </div>
+          <span className="text-xs font-bold text-white font-body" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}>
+            Share
+          </span>
+        </motion.button>
+      </div>
+
+      {/* FLOATING GIFT BUTTON - Bottom Right */}
+      <motion.button
+        whileTap={{ scale: 0.9 }}
+        animate={{ 
+          boxShadow: [
+            '0 0 20px rgba(255,215,0,0.4)',
+            '0 0 35px rgba(255,215,0,0.7)',
+            '0 0 20px rgba(255,215,0,0.4)'
+          ]
+        }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        onClick={() => setShowGiftDrawer(true)}
+        className="absolute bottom-4 right-4 w-14 h-14 rounded-full flex items-center justify-center backdrop-blur-xl z-[90]"
+        style={{ 
+          background: 'linear-gradient(135deg, #FFD700, #FFA500)',
+          paddingBottom: 'env(safe-area-inset-bottom)'
+        }}
+        data-testid="open-gift-drawer-btn"
+      >
+        <Gift className="w-7 h-7 text-white" />
+      </motion.button>
+
+      {/* Gift Drawer */}
+      <GiftDrawer 
+        isOpen={showGiftDrawer}
+        onClose={() => setShowGiftDrawer(false)}
+        gifts={gifts}
+        userBalance={user?.walletBalance || 0}
+        onSend={sendGift}
+      />
+
+      {/* LIVE Badge - Top Left (over gradient) */}
+      <div className="absolute top-20 left-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg z-[80]" style={{ background: '#ff0050' }}>
+        <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
+        <span className="text-xs font-bold text-white font-body">LIVE</span>
       </div>
     </div>
   );

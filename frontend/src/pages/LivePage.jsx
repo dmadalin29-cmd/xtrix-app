@@ -33,16 +33,16 @@ const LivePage = () => {
   };
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+    <div className="p-4 lg:p-6 max-w-[1400px] mx-auto">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 lg:mb-8">
         <div className="flex items-center gap-3 mb-1">
-          <h1 className="text-4xl sm:text-5xl font-bold text-white tracking-tight font-display">LIVE</h1>
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight font-display">LIVE</h1>
           <span className="flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold text-white font-body" style={{ background: '#ff0050' }}>
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
             {streams.length} Live Acum
           </span>
         </div>
-        <p className="text-base sm:text-lg text-white/40 font-body">Urmărește live stream-uri de la creatorii tăi preferați</p>
+        <p className="text-sm sm:text-base lg:text-lg text-white/40 font-body">Urmărește live stream-uri de la creatorii tăi preferați</p>
       </motion.div>
 
       {/* Live Stream Grid */}
@@ -53,11 +53,11 @@ const LivePage = () => {
       ) : streams.length === 0 ? (
         <div className="text-center py-20">
           <Radio className="w-16 h-16 text-white/10 mx-auto mb-4" />
-          <p className="text-white/40">Niciun stream live momentan</p>
-          <p className="text-xs text-white/20 mt-2">Fii primul care merge LIVE!</p>
+          <p className="text-white/40 font-body">Niciun stream live momentan</p>
+          <p className="text-xs text-white/20 mt-2 font-body">Fii primul care merge LIVE!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 lg:gap-4">
           {streams.map((stream, i) => (
             <motion.div
               key={stream.id}
@@ -65,6 +65,7 @@ const LivePage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
               whileHover={{ scale: 1.02, y: -4 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => navigate(`/watch/${stream.id}`)}
               className="group relative rounded-2xl overflow-hidden cursor-pointer"
               style={{ border: '1px solid rgba(255,255,255,0.06)' }}

@@ -154,18 +154,18 @@ const DiscoverPage = ({ live }) => {
   }
 
   return (
-    <div className="p-6 max-w-[1400px] mx-auto">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-1 font-display">{live ? 'LIVE Now' : 'Discover'}</h1>
-        <p className="text-sm text-white/40">{live ? 'Watch live streams from creators' : 'Explore trending content and discover new creators'}</p>
+    <div className="p-4 lg:p-6 max-w-[1400px] mx-auto">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 lg:mb-8">
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-1 font-display">{live ? 'LIVE Now' : 'Discover'}</h1>
+        <p className="text-sm sm:text-base text-white/40 font-body">{live ? 'Watch live streams from creators' : 'Explore trending content and discover new creators'}</p>
       </motion.div>
 
       {/* Trending Hashtags */}
       {!live && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-8">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="mb-6 lg:mb-8">
           <div className="flex items-center gap-2 mb-4">
             <TrendingUp className="w-5 h-5 text-[#ff0050]" />
-            <h2 className="text-lg font-bold text-white font-display">Trending Now</h2>
+            <h2 className="text-base lg:text-lg font-bold text-white font-display">Trending Now</h2>
           </div>
           <div className="flex gap-3 overflow-x-auto pb-3" style={{ scrollbarWidth: 'none' }}>
             {trendingHashtags.map((hashtag, i) => {
