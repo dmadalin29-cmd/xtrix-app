@@ -86,8 +86,8 @@ const DiscoverPage = ({ live }) => {
           ]);
           const tData = trendingRes.data;
           setTrendingHashtags(tData.hashtags?.length > 0 ? tData.hashtags : mockHashtags);
-          // Only use real videos if they have thumbnails
-          const realVids = (tData.videos || []).filter(v => v.thumbnail || (v.videoUrl && v.videoUrl.includes('youtube')));
+          // Use real videos from smart algorithm
+          const realVids = tData.videos || [];
           setTrendingVideos(realVids.length > 0 ? realVids : mockVideos);
           setCreators(creatorsRes.data?.length > 0 ? creatorsRes.data : mockUsers);
         }

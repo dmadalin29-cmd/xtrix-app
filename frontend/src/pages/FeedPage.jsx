@@ -523,13 +523,12 @@ const FeedPage = ({ following: isFollowing }) => {
         res = await videosAPI.getFeed(pageNum, 10);
       }
       const vids = res.data.videos || [];
-      const goodVids = vids.filter(v => v.thumbnail || (v.videoUrl && v.videoUrl.includes('youtube')));
       setHasMore(res.data.hasMore || false);
 
       if (append) {
-        setFeedVideos(prev => [...prev, ...goodVids]);
-      } else if (goodVids.length > 0) {
-        setFeedVideos(goodVids);
+        setFeedVideos(prev => [...prev, ...vids]);
+      } else if (vids.length > 0) {
+        setFeedVideos(vids);
       } else {
         setFeedVideos(mockVideos);
       }
