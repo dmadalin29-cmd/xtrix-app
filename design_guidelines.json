@@ -1,158 +1,106 @@
 {
-  "project_name": "KdM (Klip de Moment)",
-  "theme": "ULTRA ULTRA MODERN - Dark Mode Only",
+  "theme_strategy": {
+    "mode": "dark",
+    "background_base": "#0B0B13",
+    "glass_panels": "rgba(15, 15, 25, 0.65)"
+  },
   "typography": {
     "headings": {
       "family": "'Unbounded', sans-serif",
       "weights": ["400", "700", "900"],
-      "styling": "tracking-tighter leading-none"
+      "usage": "Headers, live stream titles, large numbers, usernames"
     },
     "body": {
       "family": "'Outfit', sans-serif",
       "weights": ["300", "400", "500", "600"],
-      "styling": "tracking-normal leading-relaxed"
-    },
-    "labels": {
-      "family": "'Outfit', sans-serif",
-      "styling": "uppercase tracking-[0.2em] text-xs font-semibold text-white/50"
-    },
-    "anti_pattern": "Do NOT use Inter, Roboto, or generic sans for headings. Avoid boring standard fonts. Use Unbounded for a bold, Gen-Z, disruptive feel."
+      "usage": "Chat messages, comments, descriptions, UI text"
+    }
   },
   "colors": {
-    "backgrounds": {
-      "base": "#050505",
-      "surface": "#0a0a0a",
-      "elevated": "rgba(255, 255, 255, 0.03)"
-    },
-    "accents": {
-      "pink": "#ff0050",
-      "cyan": "#00f5d4",
-      "gold": "#FFD700",
-      "purple": "#7a00ff"
-    },
-    "text": {
-      "primary": "#ffffff",
-      "secondary": "rgba(255, 255, 255, 0.6)",
-      "muted": "rgba(255, 255, 255, 0.4)"
-    },
-    "borders": {
-      "subtle": "rgba(255, 255, 255, 0.08)",
-      "strong": "rgba(255, 255, 255, 0.15)"
-    },
-    "rules": "Never use pure #000000; base is #050505. Accents must be highly vibrant. Use gradients sparingly—mostly for active buttons, live rings, or text masks (e.g., bg-clip-text)."
+    "primary": "#ff0050",
+    "primary_glow": "rgba(255, 0, 80, 0.4)",
+    "gold": "#FFD700",
+    "gold_glow": "rgba(255, 215, 0, 0.4)",
+    "accent": "#00f5d4",
+    "text_primary": "#FFFFFF",
+    "text_secondary": "rgba(255, 255, 255, 0.6)",
+    "border_subtle": "rgba(255, 255, 255, 0.08)",
+    "overlay_gradient": "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 40%, rgba(0,0,0,0) 80%, rgba(0,0,0,0.6) 100%)"
   },
   "visual_enhancers": {
-    "glassmorphism": {
-      "name": "The Crystal Glass",
-      "background": "bg-black/60",
-      "blur": "backdrop-blur-2xl",
-      "saturation": "backdrop-saturate-150",
-      "border": "border border-white/10",
-      "shadow": "shadow-[0_8px_32px_rgba(0,0,0,0.4)]",
-      "usage": "Use for Modals, Dropdowns, Floating Navs, Sticky Headers. CRITICAL: Never use pure transparent without blur if there is text over video/content."
-    },
-    "tracing_beam": {
-      "name": "Linear Glow",
-      "usage": "Use for Go Live Studio inputs, Premium Cards, and Wallet Modals to signal high-tech.",
-      "implementation": "1px animated border gradient via Framer Motion or background gradient mask."
-    },
-    "overlays": {
-      "video_bottom": "bg-gradient-to-t from-black/90 via-black/40 to-transparent (Required over full-screen videos for text readability).",
-      "video_top": "bg-gradient-to-b from-black/60 to-transparent"
-    }
+    "glassmorphism": "Use backdrop-blur-xl (24px) combined with background rgba(15,15,25,0.65) and a 1px solid border of rgba(255,255,255,0.08). Never use pure transparency for content surfaces like dropdowns or bottom sheets.",
+    "shadows": "Replace box-shadows with glowing drop-shadows on interactive elements (e.g. drop-shadow-[0_0_15px_rgba(255,0,80,0.5)]).",
+    "motion": "Use Framer Motion for all interactions. whileTap={{ scale: 0.92 }}. List staggering for chat messages and comments. Animate flying gifts across the screen using absolute positioning and spring physics."
   },
-  "component_rules": {
-    "dropdowns_and_selects": {
-      "critical_fix": "Native `<select>` with white backgrounds are BANNED.",
-      "implementation": "Build custom dropdowns using framer-motion or HeadlessUI/Radix UI. Container must use The Crystal Glass styling (bg-black/80 backdrop-blur-2xl border border-white/15). Dropdown options should hover with bg-white/10. Rounded corners must be perfectly matching the input (e.g. rounded-xl)."
-    },
-    "buttons": {
-      "primary": "Pill-shaped (rounded-full) or sharp with subtle rounding (rounded-xl). Background: linear gradient of Pink to Purple or solid Pink. Text: bold, white.",
-      "secondary": "Glassmorphism button (bg-white/5 border border-white/10 text-white hover:bg-white/10).",
-      "interactions": "MUST include hover:scale-105 active:scale-95. Transition transform 0.2s ease."
-    },
-    "inputs": {
-      "styling": "bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-white/30 focus:border-cyan focus:bg-white/10 outline-none transition-all.",
-      "focus_state": "ring-2 ring-cyan/50 glow effect."
-    },
-    "cards": {
-      "styling": "bg-[#0a0a0a] border border-white/5 rounded-2xl overflow-hidden hover:border-white/15 transition-colors.",
-      "wallet_card": "Use glassmorphism + gold accent glow."
-    }
+  "layouts": {
+    "general": "Mobile-first approach. Use h-[100dvh] for viewport height to bypass iOS Safari bottom bar issues. Safe-area-inset padding for top and bottom. Hide desktop sidebar on mobile, show translucent fixed bottom navigation bar."
   },
-  "grids_and_layouts": {
-    "feed_page": "Edge-to-edge vertical swipe layout (100dvh). No scrolling bars. Absolute positioning for Right Side Actions (Heart, Comment, Share) and Bottom Info (Username, Caption, Music).",
-    "profile_page": "High density grid for video thumbnails (grid-cols-3 gap-1). User header must have centered avatar, stats in a flex row, and bio.",
-    "discover_page": "Bento Grid protocol (Tetris mode) for trending hashtags and categories. Mix wide, square, and tall cards. gap-4.",
-    "live_studio": "Split layout. Left: Video preview (large). Right: Controls, Dropdowns (Category), and Stream key. High-density, command-center look (The Performance Pro vibe)."
-  },
-  "motion": {
-    "page_transitions": "initial={{opacity: 0, y: 10}} animate={{opacity: 1, y: 0}} exit={{opacity: 0, y: -10}} transition={{duration: 0.3}}",
-    "micro_interactions": {
-      "buttons": "scale up on hover (1.05), scale down on active (0.95)",
-      "list_items": "staggered entrance animations",
-      "like_heart": "rapid spring scale up + fade out (TikTok style double tap)",
-      "gifts": "Framer motion path animations flying across the screen with glow filters"
-    },
-    "rules": "Avoid 'transition-all', specify properties like 'transition-transform, transition-colors, transition-opacity'."
+  "grids": {
+    "bento_discover": "Use asymmetric bento grid for Discover page (grid-cols-2 or 3, mixing col-span-2 and col-span-1 for variation).",
+    "profile_videos": "Strict 3-column square grid without gaps for TikTok style profile videos (grid-cols-3 gap-0.5)."
   },
   "accessibility": {
-    "contrast": "Ensure white text over videos has a text-shadow (e.g. drop-shadow-md or drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]).",
-    "test_attributes": "Add data-testid to ALL interactive elements (e.g. data-testid=\"live-category-dropdown\", data-testid=\"like-button\").",
-    "focus": "All focus states must be highly visible (e.g., focus:ring-2 focus:ring-pink-500)."
+    "touch_targets": "Minimum 44x44px for all interactive elements.",
+    "contrast": "Text over video must have text-shadow or a gradient overlay underneath to ensure legibility.",
+    "testing": "All interactive elements MUST include a data-testid attribute in kebab-case (e.g. data-testid=\"gift-send-button\")."
   },
-  "media": {
-    "images": "Avatars must be rounded-full with border-2 border-transparent hover:border-pink-500. Thumbnails must have aspect-[9/16] or aspect-video.",
-    "videos": "Must cover object-cover and snap to container."
-  },
-  "image_urls": [
-    {
-      "url": "https://images.unsplash.com/photo-1729375874763-45ddfc9feec1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA4Mzl8MHwxfHNlYXJjaHwyfHxjeWJlcnB1bmslMjBuZW9uJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzc0MTA3MzUyfDA&ixlib=rb-4.1.0&q=85",
-      "description": "Cyberpunk neon portrait, woman with blue light",
-      "category": "user_avatar_placeholder"
+  "mobile_ux_blueprint": {
+    "live_stream_viewer": {
+      "priority": "CRITICAL URGENT",
+      "layout": "Absolute full screen (h-[100dvh] w-full). Video must cover the entire background (object-cover). Overlays sit on top.",
+      "top_bar": "Absolute top. Broadcaster profile pill (avatar + name + follow button) top left. Live viewer count pill (red bg) and 'X' close button top right. Safe-area-inset-top applied.",
+      "chat_overlay": "Absolute bottom left, width 70%. Height max 35vh. Use mask-image: linear-gradient(to bottom, transparent, black 15%, black) to fade out older messages at the top. Messages must have no background, just text-shadow for readability over video.",
+      "action_stack": "Absolute bottom right. Vertical flex column. Contains Profile, Like, Share, and a prominent floating 'Gift' button (gold colored, glowing animation).",
+      "input_bar": "Small transparent pill input at absolute bottom left under chat. 'Spune ceva...' (Say something...).",
+      "gift_drawer": "Bottom sheet (use Framer Motion drag='y' or Shadcn Drawer). 50vh height. Dark glassmorphic background. Header shows user Coin balance in Gold. Grid of 20 gifts. 'Trimite' (Send) button fixed at bottom."
     },
-    {
-      "url": "https://images.unsplash.com/photo-1634910440823-193b061d28a5?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA4Mzl8MHwxfHNlYXJjaHwxfHxjeWJlcnB1bmslMjBuZW9uJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzc0MTA3MzUyfDA&ixlib=rb-4.1.0&q=85",
-      "description": "Woman standing in front of colorful display",
-      "category": "user_avatar_placeholder"
-    },
-    {
-      "url": "https://images.pexels.com/photos/36064312/pexels-photo-36064312.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
-      "description": "Vibrant cyberpunk young man",
-      "category": "user_avatar_placeholder"
-    },
-    {
-      "url": "https://images.unsplash.com/photo-1558961917-2bfe20527f46?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA4Mzl8MHwxfHNlYXJjaHwzfHxjeWJlcnB1bmslMjBuZW9uJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzc0MTA3MzUyfDA&ixlib=rb-4.1.0&q=85",
-      "description": "Man wearing black sunglasses neon",
-      "category": "live_stream_thumbnail_placeholder"
+    "feed_page": {
+      "layout": "Vertical swipe snap (snap-y snap-mandatory). Each item h-[100dvh] w-full.",
+      "controls": "Right-aligned floating action stack (Avatar, Like, Comment, Bookmark, Share). Bottom-aligned description and music ticker.",
+      "bottom_nav": "Fixed bottom bar. Glassmorphic. 5 icons. Must have z-50."
     }
+  },
+  "component_names": [
+    "LiveStreamViewer",
+    "ChatOverlay",
+    "GiftDrawer",
+    "FloatingActionStack",
+    "VideoFeed",
+    "BottomNavigation"
   ],
+  "media": {
+    "image_urls": [
+      {
+        "url": "https://images.unsplash.com/photo-1767522248089-468ec2d4efd7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDR8MHwxfHNlYXJjaHwzfHwzZCUyMGdpZnQlMjBib3glMjBuZW9ufGVufDB8fHx8MTc3NDE4NTYwOXww&ixlib=rb-4.1.0&q=85",
+        "description": "Neon glowing 3D gift box to be used as placeholder for the high-tier animated gifts.",
+        "category": "gifts"
+      },
+      {
+        "url": "https://images.pexels.com/photos/6940094/pexels-photo-6940094.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Cyberpunk neon portrait, perfect for the broadcaster avatar or live stream thumbnail.",
+        "category": "avatar"
+      }
+    ],
+    "3d_libraries": "Framer Motion 3D for simple flip/rotate interactions on gifts. Avoid heavy WebGL for the overlay to maintain stream performance."
+  },
   "instructions_to_main_agent": [
-    "AUDIT ALL NATIVE <select> tags, especially in Go Live Studio. Replace them IMMEDIATELY with a custom React dropdown built with standard <div> elements, absolute positioning, Framer Motion, and heavy glassmorphism (bg-black/80 backdrop-blur-2xl border-white/20). NO MORE WHITE DROPDOWNS.",
-    "Implement the 'Crystal Glass' effect heavily across all overlays, sidebars, header, bottom nav, and modals.",
-    "Add 'Unbounded' and 'Outfit' to Google Fonts link in index.html, then set them up in tailwind.config.js.",
-    "Ensure the wallet, gifts panel, and auth modal feel extremely premium with glass, subtle glow shadows, and entrance animations.",
-    "Replace ALL instances of standard scrollbars with custom hidden or sleek styled scrollbars.",
-    "Feed Page must have proper text-shadow on text overlapping video, and a gradient overlay from bottom to top so UI is always legible regardless of the video content.",
-    "Make sure spacing is generous (p-6, p-8) inside modals and panels to prevent a cluttered look.",
-    "Gifts animations should fly out (use Framer motion)."
+    "You are building a TikTok clone named KdM. The core task is to FIX THE MOBILE UX, specifically redesigning the Live Stream Viewer from a split-screen to a full-screen overlay experience.",
+    "The Live Stream viewer must not be 70/30 split. Make the video 100dvh absolute inset-0. Put the chat, user info, and action buttons as absolute overlays on top of the video.",
+    "Create a Bottom Sheet for the Gifts menu triggered by a floating gift icon.",
+    "Implement the Chat with a gradient mask (mask-image: linear-gradient) so messages organically fade out at the top.",
+    "Use framer-motion for micro-animations (e.g., hearts popping on double tap, gifts flying across screen, buttons scaling on tap).",
+    "All text is in Romanian. Follow the color palette exactly (#ff0050 primary, #FFD700 gold).",
+    "Write .js and .jsx files. DO NOT output TypeScript (.ts/.tsx).",
+    "Ensure the layout prevents the chat from blocking the floating action buttons on the right."
   ],
-  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
-    "You tend to converge toward generic, 'on distribution' outputs. In frontend design, this creates what users call the 'AI slop' aesthetic. Avoid this: make creative, distinctive frontends that surprise and delight.",
-    "Dark colors look good when used independently without gradients. DO NOT use dark colors as gradients.",
-    "Don't make generic centered layouts, simplistic gradients, and uniform styling.",
-    "Create depth through layered design elements with z-index hierarchy.",
-    "Use glass-morphism effects with backdrop filters (12-24px blur).",
-    "You MUST NOT apply universal transition. Eg: transition: all. This results in breaking transforms. Always add transitions for specific interactive elements like button, input excluding transforms.",
-    "You MUST NOT center align the app container, ie do not add .App { text-align: center; } in the css file. This disrupts the human natural reading flow of text.",
-    "Always use modern button styles like pill-shaped, or sharp button with interaction animations & color relevant to the app style.",
-    "NEVER: use AI assistant Emoji characters like 🤖🧠💭💡🔮🎯📚🎭🎬🎪🎉🎊🎁🎀🎂🍰🎈🎨🎰💰💵💳🏦💎🪙💸🤑📊📈📉💹🔢🏆🥇 etc for icons.",
-    "Every interaction needs micro-animations - hover states, transitions, parallax effects, and entrance animations. Static = dead.",
-    "Use 2-3x more spacing than feels comfortable. Cramped designs look cheap.",
-    "Subtle grain textures, noise overlays, custom cursors, selection states, and loading animations: separates good from extraordinary.",
-    "Prioritize using pre-existing components from src/components/ui when applicable.",
-    "Components MUST use named exports (export const ComponentName = ...)",
-    "Pages MUST use default exports (export default function PageName() {...})",
-    "Use sonner for toasts. Sonner component are located in /app/src/components/ui/sonner.tsx."
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Do not use generic centered layouts or simplistic gradients.",
+    "Never apply 'transition: all'. Target specific properties.",
+    "Always use 'data-testid' on interactive elements for testing.",
+    "Use glass-morphism effects with backdrop-blur-xl and semi-transparent borders. Never use pure transparent backgrounds over content.",
+    "Use 2-3x more spacing. Cramped designs look cheap.",
+    "On mobile, bottom navigation should be fixed, and dialogs should behave as bottom sheets.",
+    "Component Reuse: Prioritize Shadcn UI patterns but customize them heavily to match the brand.",
+    "Avoid using emoji icons. Use Lucide-react or Phosphor Icons."
   ]
 }
