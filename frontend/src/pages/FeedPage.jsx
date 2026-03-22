@@ -108,15 +108,15 @@ const VideoCard = ({ video, isActive }) => {
   };
 
   return (
-    <div className="snap-item flex items-center justify-center gap-5 py-4 px-4 sm:px-8" style={{ height: 'calc(100vh - 64px)' }}>
-      {/* Video Container */}
+    <div className="snap-item flex items-center justify-center py-0 px-0" style={{ height: 'calc(100dvh - 64px)' }}>
+      {/* Video Container - FULL SCREEN cu overlays */}
       <div 
-        className={`relative h-full aspect-[9/16] max-h-[calc(100vh-96px)] rounded-2xl overflow-hidden group ${isLiveStream ? 'cursor-pointer' : ''}`} 
-        style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }} 
+        className={`relative w-full h-full ${isLiveStream ? 'cursor-pointer' : ''}`} 
+        style={{ background: 'rgba(0,0,0,1)' }} 
         onDoubleClick={isLiveStream ? handleLiveClick : handleDoubleClick} 
         onClick={isLiveStream ? handleLiveClick : () => { if (playTimeoutRef.current) { clearTimeout(playTimeoutRef.current); } setPlaying(p => !p); }}
       >
-        {/* Live Stream Badge (if is live) */}
+        {/* Live Stream Badge (if is live) - OVERLAY absolute */}
         {isLiveStream && (
           <div className="absolute top-4 left-4 z-30 flex items-center gap-1.5 px-3 py-1.5 rounded-lg" style={{ background: '#ff0050' }}>
             <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
@@ -124,7 +124,7 @@ const VideoCard = ({ video, isActive }) => {
           </div>
         )}
 
-        {/* Video Player (or Live Stream Preview) */}
+        {/* Video Player (or Live Stream Preview) - FULL SCREEN */}
         {isLiveStream ? (
           // Live stream preview (thumbnail or placeholder)
           <div className="absolute inset-0 bg-gradient-to-br from-purple-900/40 via-pink-900/40 to-black flex items-center justify-center">
@@ -132,11 +132,11 @@ const VideoCard = ({ video, isActive }) => {
               <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 mx-auto" style={{ background: 'rgba(255,0,80,0.2)' }}>
                 <Radio className="w-10 h-10 text-[#ff0050]" />
               </div>
-              <p className="text-white/90 text-lg font-bold font-display mb-1">{video.description}</p>
-              <p className="text-white/50 text-sm font-body">Tap pentru a viziona LIVE</p>
+              <p className="text-white/90 text-lg font-bold font-display mb-1" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>{video.description}</p>
+              <p className="text-white/50 text-sm font-body" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>Tap pentru a viziona LIVE</p>
               <div className="flex items-center gap-2 justify-center mt-3">
                 <Eye className="w-4 h-4 text-white/60" />
-                <span className="text-sm font-bold text-white/80 font-body">{video.views} viewers</span>
+                <span className="text-sm font-bold text-white/80 font-body" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.9)' }}>{video.views} viewers</span>
               </div>
             </div>
           </div>
@@ -148,15 +148,31 @@ const VideoCard = ({ video, isActive }) => {
             playing={playing}
             muted={muted}
             loop
-            style={{ position: 'absolute', top: 0, left: 0 }}
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
             onReady={() => setPlayerReady(true)}
             onError={(e) => { console.warn('Video error:', e); setPlaying(false); }}
-            config={{ youtube: { playerVars: { controls: 0, modestbranding: 1, rel: 0, showinfo: 0 } } }}
+            config={{ 
+              youtube: { 
+                playerVars: { 
+                  controls: 0, 
+                  modestbranding: 1, 
+                  rel: 0, 
+                  showinfo: 0,
+                  iv_load_policy: 3,
+                  fs: 0
+                } 
+              },
+              file: {
+                attributes: {
+                  style: { width: '100%', height: '100%', objectFit: 'cover' }
+                }
+              }
+            }}
           />
         )}
 
         {/* Thumbnail fallback */}
-        {video.thumbnail && <img src={video.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ zIndex: playing ? -1 : 1 }} />}
+        {video.thumbnail && !playing && <img src={video.thumbnail} alt="" className="absolute inset-0 w-full h-full object-cover" style={{ zIndex: 1 }} />}
 
         {/* Play/Pause overlay */}
         <AnimatePresence>
@@ -181,73 +197,71 @@ const VideoCard = ({ video, isActive }) => {
         {/* Bottom gradient */}
         <div className="absolute bottom-0 left-0 right-0 h-2/5 bg-gradient-to-t from-black/90 via-black/50 to-transparent z-[2]" />
 
-        {/* Bottom info */}
-        <div className="absolute bottom-0 left-0 right-0 p-5 z-[3]">
-          <div className="flex items-center gap-2 mb-3">
-            <Avatar className="w-10 h-10 ring-2 ring-white/20">
+        {/* Bottom info overlay - TikTok style compact */}
+        <div className="absolute bottom-20 sm:bottom-24 left-3 sm:left-4 right-20 sm:right-24 z-[3]">
+          <div className="flex items-center gap-2 mb-2">
+            <Avatar className="w-9 h-9 sm:w-10 sm:h-10 ring-2 ring-white/30 cursor-pointer" onClick={(e) => { e.stopPropagation(); navigate(`/profile/${video.user?.username}`); }}>
               <AvatarImage src={video.user?.avatar} />
               <AvatarFallback>{(video.user?.displayName || 'U')[0]}</AvatarFallback>
             </Avatar>
-            <div>
+            <div className="flex-1 min-w-0 flex items-center gap-2">
               <div className="flex items-center gap-1.5">
-                <span className="text-sm font-bold text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-body">{video.user?.username}</span>
-                {video.user?.verified && <BadgeCheck className="w-3.5 h-3.5 text-[#00f5d4] drop-shadow-md" />}
+                <span className="text-sm sm:text-base font-bold text-white font-body" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.95)' }}>{video.user?.username}</span>
+                {video.user?.verified && <BadgeCheck className="w-4 h-4 text-[#00f5d4]" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.8))' }} />}
               </div>
-              <span className="text-[11px] text-white/50 drop-shadow-md font-body">{video.createdAt}</span>
+              {!following && !isLiveStream && (
+                <motion.button 
+                  whileHover={{ scale: 1.05 }} 
+                  whileTap={{ scale: 0.95 }} 
+                  onClick={(e) => { e.stopPropagation(); setFollowing(true); }} 
+                  className="px-3 py-1 rounded-full text-xs font-bold text-white font-body"
+                  style={{ background: '#ff0050', textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}
+                >
+                  Follow
+                </motion.button>
+              )}
             </div>
-            {!following && (
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={(e) => { e.stopPropagation(); setFollowing(true); }} className="ml-3 px-4 py-1.5 rounded-full text-xs font-bold text-white border border-[#ff0050] hover:bg-[#ff0050]/20 transition-colors drop-shadow-lg font-body">
-                Follow
-              </motion.button>
-            )}
           </div>
-          <p className="text-sm text-white/90 leading-relaxed mb-3 line-clamp-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] font-body">{video.description}</p>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full" style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
-              <Music className="w-3.5 h-3.5 text-white/70" />
-              <span className="text-xs text-white/70 max-w-[180px] truncate drop-shadow-md font-body">{video.music || 'Original Sound'}</span>
-            </div>
+          <p className="text-sm sm:text-base text-white leading-snug mb-2 line-clamp-2 font-body" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.95)' }}>{video.description}</p>
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full inline-flex" style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(10px)' }}>
+            <Music className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/80" />
+            <span className="text-xs text-white/80 max-w-[140px] sm:max-w-[180px] truncate font-body" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}>{video.music || 'Original Sound'}</span>
           </div>
         </div>
-
-        {/* Mute button */}
-        <button onClick={(e) => { e.stopPropagation(); setMuted(!muted); }} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center z-10 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(10px)' }}>
-          {muted ? <VolumeX className="w-4 h-4 text-white/80" /> : <Volume2 className="w-4 h-4 text-white/80" />}
-        </button>
       </div>
 
-      {/* Action Buttons - Responsive sizing */}
-      <div className="flex flex-col items-center gap-4 sm:gap-6">
+      {/* Action Buttons - TikTok style (absolute right, bottom) */}
+      <div className="absolute bottom-20 sm:bottom-24 right-3 sm:right-4 z-[90] flex flex-col items-center gap-3 sm:gap-4">
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <motion.button onClick={isLiveStream ? handleLiveClick : handleLike} animate={liked ? { scale: [1, 1.3, 1] } : {}} className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${liked ? 'bg-[#ff0050]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`} style={liked ? { boxShadow: '0 0 20px rgba(255,0,80,0.3)' } : {}}>
-            <Heart className={`w-5 h-5 sm:w-6 sm:h-6 ${liked ? 'text-[#ff0050]' : 'text-white'}`} fill={liked ? '#ff0050' : 'none'} />
+          <motion.button onClick={isLiveStream ? handleLiveClick : handleLike} animate={liked ? { scale: [1, 1.3, 1] } : {}} className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-colors ${liked ? 'bg-[#ff0050]/20' : 'bg-black/30 hover:bg-black/40'}`} style={liked ? { boxShadow: '0 0 20px rgba(255,0,80,0.4)', backdropFilter: 'blur(10px)' } : { backdropFilter: 'blur(10px)' }}>
+            <Heart className={`w-6 h-6 sm:w-7 sm:h-7 ${liked ? 'text-[#ff0050]' : 'text-white'}`} fill={liked ? '#ff0050' : 'none'} />
           </motion.button>
-          <span className={`text-xs font-semibold font-body ${liked ? 'text-[#ff0050]' : 'text-white/60'}`}>{formatNumber(likeCount)}</span>
+          <span className={`text-xs sm:text-sm font-bold font-body mt-1 ${liked ? 'text-[#ff0050]' : 'text-white'}`} style={{ textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}>{formatNumber(likeCount)}</span>
         </motion.div>
 
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <button onClick={() => !isLiveStream && setShowComments(true)} disabled={isLiveStream} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors disabled:opacity-50">
-            <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <button onClick={() => !isLiveStream && setShowComments(true)} disabled={isLiveStream} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors disabled:opacity-50" style={{ backdropFilter: 'blur(10px)' }}>
+            <MessageCircle className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </button>
-          <span className="text-xs font-semibold text-white/60 font-body">{formatNumber(video.comments || 0)}</span>
+          <span className="text-xs sm:text-sm font-bold text-white font-body mt-1" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}>{formatNumber(video.comments || 0)}</span>
         </motion.div>
 
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <motion.button onClick={handleBookmark} animate={bookmarked ? { scale: [1, 1.3, 1] } : {}} className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-colors ${bookmarked ? 'bg-[#f5c518]/20' : 'bg-white/[0.06] hover:bg-white/[0.1]'}`}>
-            <Bookmark className={`w-5 h-5 sm:w-6 sm:h-6 ${bookmarked ? 'text-[#f5c518]' : 'text-white'}`} fill={bookmarked ? '#f5c518' : 'none'} />
+          <motion.button onClick={handleBookmark} animate={bookmarked ? { scale: [1, 1.3, 1] } : {}} className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center transition-colors ${bookmarked ? 'bg-[#f5c518]/20' : 'bg-black/30 hover:bg-black/40'}`} style={{ backdropFilter: 'blur(10px)' }}>
+            <Bookmark className={`w-6 h-6 sm:w-7 sm:h-7 ${bookmarked ? 'text-[#f5c518]' : 'text-white'}`} fill={bookmarked ? '#f5c518' : 'none'} />
           </motion.button>
-          <span className={`text-xs font-semibold font-body ${bookmarked ? 'text-[#f5c518]' : 'text-white/60'}`}>{formatNumber(video.bookmarks || 0)}</span>
+          <span className={`text-xs sm:text-sm font-bold font-body mt-1 ${bookmarked ? 'text-[#f5c518]' : 'text-white'}`} style={{ textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}>{formatNumber(video.bookmarks || 0)}</span>
         </motion.div>
 
         <motion.div className="action-btn" whileTap={{ scale: 0.85 }}>
-          <button onClick={() => setShowShare(true)} className="w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center bg-white/[0.06] hover:bg-white/[0.1] transition-colors">
-            <Share2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+          <button onClick={() => setShowShare(true)} className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center bg-black/30 hover:bg-black/40 transition-colors" style={{ backdropFilter: 'blur(10px)' }}>
+            <Share2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
           </button>
-          <span className="text-xs font-semibold text-white/60 font-body">{formatNumber(video.shares || 0)}</span>
+          <span className="text-xs sm:text-sm font-bold text-white font-body mt-1" style={{ textShadow: '0 2px 6px rgba(0,0,0,0.9)' }}>{formatNumber(video.shares || 0)}</span>
         </motion.div>
 
-        <div className={`music-disc mt-2 ${!isLiveStream && playing ? 'animate-spin-slow' : ''}`}>
-          <img src={video.user?.avatar} alt="" className="w-7 h-7 rounded-full object-cover" />
+        <div className={`music-disc mt-1 ${!isLiveStream && playing ? 'animate-spin-slow' : ''}`}>
+          <img src={video.user?.avatar} alt="" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full object-cover ring-2 ring-white/20" />
         </div>
       </div>
 

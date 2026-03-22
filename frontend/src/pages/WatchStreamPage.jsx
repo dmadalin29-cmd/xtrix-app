@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Eye, Heart, Share2, Gift, Send, ChevronDown, UserPlus, Coins } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useSwipeable } from 'react-swipeable';
 import { useAuth } from '../contexts/AuthContext';
 import { liveAPI, giftsAPI } from '../services/api';
 import { Avatar, AvatarImage, AvatarFallback } from '../components/ui/avatar';
@@ -125,6 +126,8 @@ const WatchStreamPage = () => {
   const hlsRef = useRef(null);
   const chatEndRef = useRef(null);
   
+  const [allStreams, setAllStreams] = useState([]);
+  const [currentStreamIndex, setCurrentStreamIndex] = useState(0);
   const [stream, setStream] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentViewers, setCurrentViewers] = useState(0);
@@ -135,24 +138,47 @@ const WatchStreamPage = () => {
   const [chatInput, setChatInput] = useState('');
   const [isChatCollapsed, setIsChatCollapsed] = useState(false);
 
+  // Fetch all streams and sort intelligently
   useEffect(() => {
-    const fetchStream = async () => {
+    const fetchAllStreams = async () => {
       try {
         const res = await liveAPI.getActiveStreams();
-        const foundStream = res.data.find(s => s.id === streamId);
-        if (foundStream) {
-          setStream(foundStream);
-          setCurrentViewers(foundStream.currentViewers || 0);
-          if (foundStream.hlsUrl) {
-            initializePlayer(foundStream.hlsUrl);
+        let streams = res.data || [];
+        
+        // Sort by intelligent algorithm: (viewers × 0.5) + (likes × 0.3) + (recency × 0.2)
+        streams = streams.map(s => {
+          const now = new Date();
+          const createdAt = new Date(s.createdAt);
+          const minutesAgo = (now - createdAt) / (1000 * 60);
+          const recencyScore = Math.max(0, 30 - minutesAgo); // Boost for streams < 30 min old
+          
+          const score = (s.currentViewers || 0) * 0.5 + (s.likes || 0) * 0.3 + recencyScore * 0.2;
+          return { ...s, relevanceScore: score };
+        }).sort((a, b) => b.relevanceScore - a.relevanceScore);
+        
+        setAllStreams(streams);
+        
+        // Find current stream index
+        const index = streams.findIndex(s => s.id === streamId);
+        if (index >= 0) {
+          setCurrentStreamIndex(index);
+          setStream(streams[index]);
+          setCurrentViewers(streams[index].currentViewers || 0);
+          if (streams[index].hlsUrl) {
+            initializePlayer(streams[index].hlsUrl);
           }
+        } else if (streams.length > 0) {
+          // Stream not found, redirect to first relevant stream
+          navigate(`/watch/${streams[0].id}`, { replace: true });
         }
       } catch (err) {
-        console.error('Failed to fetch stream');
+        console.error('Failed to fetch streams');
       } finally {
         setLoading(false);
       }
     };
+
+    fetchAllStreams();
 
     const fetchGifts = async () => {
       try {
@@ -163,7 +189,6 @@ const WatchStreamPage = () => {
       }
     };
 
-    fetchStream();
     fetchGifts();
 
     // Mock chat messages for demo
@@ -172,7 +197,7 @@ const WatchStreamPage = () => {
       { id: '2', user: { username: 'fan_kdm', avatar: '' }, text: 'Salut! Cum merge?', timestamp: new Date() },
       { id: '3', user: { username: 'creator_bella', avatar: '' }, text: 'Mulțumesc pentru suport! ❤️', timestamp: new Date() }
     ]);
-  }, [streamId]);
+  }, [streamId, navigate]);
 
   useEffect(() => {
     if (chatEndRef.current && !isChatCollapsed) {
@@ -243,6 +268,29 @@ const WatchStreamPage = () => {
     setChatInput('');
   };
 
+  // Swipe handlers for next/prev live stream
+  const goToNextStream = () => {
+    if (allStreams.length === 0) return;
+    const nextIndex = (currentStreamIndex + 1) % allStreams.length; // Circular
+    const nextStream = allStreams[nextIndex];
+    navigate(`/watch/${nextStream.id}`, { replace: true });
+  };
+
+  const goToPrevStream = () => {
+    if (allStreams.length === 0) return;
+    const prevIndex = currentStreamIndex === 0 ? allStreams.length - 1 : currentStreamIndex - 1;
+    const prevStream = allStreams[prevIndex];
+    navigate(`/watch/${prevStream.id}`, { replace: true });
+  };
+
+  const swipeHandlers = useSwipeable({
+    onSwipedUp: () => goToNextStream(),
+    onSwipedDown: () => goToPrevStream(),
+    preventScrollOnSwipe: true,
+    trackMouse: false,
+    delta: 50
+  });
+
   useEffect(() => {
     return () => {
       if (hlsRef.current) {
@@ -280,7 +328,7 @@ const WatchStreamPage = () => {
   }
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden">
+    <div {...swipeHandlers} className="fixed inset-0 bg-black overflow-hidden">
       {/* Flying Gifts */}
       <AnimatePresence>
         {flyingGifts.map((gift) => (
@@ -525,6 +573,31 @@ const WatchStreamPage = () => {
         <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
         <span className="text-xs font-bold text-white font-body">LIVE</span>
       </div>
+
+      {/* Swipe Indicators (TikTok-style) */}
+      {allStreams.length > 1 && (
+        <>
+          {currentStreamIndex < allStreams.length - 1 && (
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-1/2 right-4 z-[85] opacity-40"
+            >
+              <ChevronDown className="w-8 h-8 text-white" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))' }} />
+            </motion.div>
+          )}
+          
+          {currentStreamIndex > 0 && (
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+              className="absolute top-1/2 left-4 z-[85] opacity-40 rotate-180"
+            >
+              <ChevronDown className="w-8 h-8 text-white" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.8))' }} />
+            </motion.div>
+          )}
+        </>
+      )}
     </div>
   );
 };

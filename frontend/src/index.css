@@ -232,11 +232,25 @@ input:focus, textarea:focus {
 .snap-scroll {
   scroll-snap-type: y mandatory;
   overflow-y: scroll;
+  overflow-x: hidden;
   height: 100%;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  overscroll-behavior-y: contain;
+}
+
+.snap-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.snap-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .snap-item {
   scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 /* Video player wrapper */
