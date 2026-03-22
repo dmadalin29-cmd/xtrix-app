@@ -1,0 +1,16 @@
+# Xtrix Backend - Railway Configuration
+
+# Tell Railway this is a Dockerfile-based project
+version = 2
+
+[build]
+builder = "dockerfile"
+dockerfilePath = "backend/Dockerfile"
+dockerContext = "backend"
+
+[deploy]
+numReplicas = 1
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 10
+healthcheckPath = "/api/health"
+healthcheckTimeout = 300
