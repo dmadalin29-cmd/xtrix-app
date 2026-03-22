@@ -6,6 +6,7 @@ const API = `${BACKEND_URL}/api`;
 const api = axios.create({
   baseURL: API,
   headers: { 'Content-Type': 'application/json' },
+  timeout: 3000, // 3 seconds timeout - fast fail dacă backend nu răspunde
 });
 
 // Attach token to every request

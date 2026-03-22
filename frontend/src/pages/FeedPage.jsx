@@ -631,7 +631,10 @@ const FeedPage = ({ following: isFollowing }) => {
       }
     } catch (err) {
       console.error('Feed fetch error:', err);
-      if (!append) setFeedVideos(mockVideos);
+      if (!append) {
+        console.log('API failed, loading mock data instantly');
+        setFeedVideos(mockVideos);
+      }
     } finally {
       setLoading(false);
       setLoadingMore(false);
