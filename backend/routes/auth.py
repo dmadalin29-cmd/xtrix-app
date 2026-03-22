@@ -77,15 +77,28 @@ async def login(data: UserLogin):
     if not user_with_id or not pwd_context.verify(data.password, user_with_id.get("password", "")):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     user_id = str(user_with_id["_id"])  # Convert ObjectId to string for JWT
-    # Get user without _id for response
-    user = await db.users.find_one({"_id": user_with_id["_id"]}, {"_id": 0})
+    # Create user dict with string ID
+    user_data = {k: v for k, v in user_with_id.items() if k != "_id"}
+    user_data["_id"] = user_id
     token = create_token(user_id)
-    return AuthResponse(user=user_doc_to_response(user), token=token)
+    return AuthResponse(user=user_doc_to_response(user_data), token=token)
 
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(user_id: str = Depends(get_current_user)):
-    user = await db.users.find_one({"_id": user_id})
+    from bson import ObjectId
+    # Convert string ID back to ObjectId for MongoDB query
+    try:
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+    except:
+        # If not ObjectId, try string search
+        user = await db.users.find_one({"_id": user_id})
+    
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    return user_doc_to_response(user)
+    
+    # Convert ObjectId to string for response
+    user_id_str = str(user["_id"])
+    user_data = {k: v for k, v in user.items() if k != "_id"}
+    user_data["_id"] = user_id_str
+    return user_doc_to_response(user_data)
