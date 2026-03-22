@@ -767,14 +767,67 @@ metadata:
 
 test_plan:
   current_focus:
-    - "Wallet Modal UI - Full flow test (Balance, Topup, Withdraw tabs)"
-    - "Gift Flying Animations - Send gift in live stream and verify animation"
-    - "UI Polishing - Verify font-display applied correctly on all pages"
+    - "Smart Recommendation Algorithm - Feed"
+    - "Smart Recommendation Algorithm - Discover"
+    - "Nested Comments UI - Reply System"
+    - "PWA Enhanced - Manifest & Service Worker"
+    - "Wallet Modal UI"
+    - "Gift Flying Animations"
   stuck_tasks: []
   test_all: false
   test_priority: "high_first"
 
+  - task: "Smart Recommendation Algorithm - Feed"
+    implemented: true
+    working: "NA"
+    file: "routes/videos.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "GET /api/videos/feed now uses MongoDB aggregation pipeline with smart scoring: engagementRate (likes + comments×2 + shares×3 / views) × 0.4 + popularityScore (views×0.001 + likes×0.1) × 0.3 + recencyBoost (7-day freshness) × 0.3. Videos sorted by finalScore instead of just createdAt. Backend tested with curl - returns 1 video with proper scoring."
+
+  - task: "Smart Recommendation Algorithm - Discover"
+    implemented: true
+    working: "NA"
+    file: "routes/discover.py"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "GET /api/discover/trending now uses same smart algorithm but with slightly higher engagement weight (0.5 vs 0.4) to surface truly viral content. Backend tested with curl - returns trending videos with intelligent scoring."
+
+  - task: "Nested Comments UI - Reply System"
+    implemented: true
+    working: "NA"
+    file: "pages/FeedPage.jsx"
+    stuck_count: 0
+    priority: "high"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Created CommentItem and CommentReply components with nested UI. Features: Click Reply → opens input under comment, View X replies button (expand/collapse with animation), nested replies indented with ml-11, reply input has @username mention placeholder. Backend APIs already existed (/api/videos/comments/{id}/replies). Tested backend with curl - created 2 nested replies successfully. Frontend needs E2E testing."
+
+  - task: "PWA Enhanced - Manifest & Service Worker"
+    implemented: true
+    working: "NA"
+    file: "public/manifest.json, public/sw.js, public/index.html"
+    stuck_count: 0
+    priority: "medium"
+    needs_retesting: true
+    status_history:
+        - working: "NA"
+        - agent: "main"
+        - comment: "Enhanced manifest.json with shortcuts (For You, LIVE, Upload), better icons with gradients, Romanian descriptions, display_override. Upgraded sw.js cache strategy (cache-v2) with network-first for navigation, cache-first for assets. Added iOS/Android meta tags in index.html (apple-touch-icon, viewport-fit=cover, mobile-web-app-capable). PWA can now be installed on mobile devices with proper app experience."
+
 agent_communication:
     - agent: "main"
     - message: "Forked agent here. Fixed critical WalletModal crash from previous agent (removed Portal approach, used simple fixed positioning). Created WalletModal with 3 tabs, added Wallet button in Header. Implemented Gift flying animations (FlyingGift component with sparkles, glow, scale, rotate). Applied font-display/font-body across all pages. Ready for comprehensive frontend testing."
+    - agent: "main"
+    - message: "NEW SESSION (Fork 2): Fixed navigation bug in LivePage.jsx (missing useNavigate import). Validated WatchStreamPage full-screen layout (70/30 split working perfectly, no sidebar/header overlap). User confirmed full-screen works. Then implemented 3 new features: 1) PWA Enhanced (manifest shortcuts, better icons, improved service worker v2), 2) Smart Recommendation Algorithm for BOTH Feed & Discover (engagement + popularity + recency scoring via MongoDB aggregation), 3) Nested Comments UI (Reply button, expandable nested replies with indent, 'View X replies' button). Backend APIs tested with curl (✅ algorithm working, ✅ 2 nested replies created). Frontend nested UI needs E2E testing via testing subagent. All code linted (✅ Python, ✅ JavaScript)."
 

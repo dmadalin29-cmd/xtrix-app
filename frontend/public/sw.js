@@ -1,41 +1,79 @@
-const CACHE_NAME = 'kdm-cache-v1';
+const CACHE_NAME = 'kdm-cache-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
+  '/static/css/main.css',
+  '/static/js/main.js',
 ];
 
-// Install
+const CACHE_ROUTES = [
+  '/',
+  '/discover',
+  '/live',
+  '/profile',
+  '/following',
+];
+
+// Install - cache static assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS))
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(STATIC_ASSETS).catch((err) => {
+        console.warn('Cache addAll failed:', err);
+      });
+    })
   );
   self.skipWaiting();
 });
 
-// Activate
+// Activate - clean old caches
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
+      Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      )
     )
   );
   self.clients.claim();
 });
 
-// Fetch - Network first, fallback to cache
+// Fetch - Network first, fallback to cache for navigation
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET and API requests
-  if (event.request.method !== 'GET' || event.request.url.includes('/api/')) {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip non-GET requests
+  if (request.method !== 'GET') return;
+
+  // Skip API requests (always network)
+  if (url.pathname.startsWith('/api/')) return;
+
+  // For navigation requests (pages)
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+          return response;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
     return;
   }
 
+  // For other resources (images, fonts, etc) - cache first
   event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        const clone = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+    caches.match(request).then((cached) => {
+      if (cached) return cached;
+      return fetch(request).then((response) => {
+        if (response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
         return response;
-      })
-      .catch(() => caches.match(event.request))
+      });
+    })
   );
 });

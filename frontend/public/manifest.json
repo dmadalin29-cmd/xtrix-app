@@ -1,28 +1,66 @@
 {
   "short_name": "KdM",
   "name": "KdM - Klip de Moment",
-  "description": "Share your moments with the world. Short videos, infinite creativity.",
+  "description": "Descoperă, creează și partajează momente scurte. Videos virale, live streaming, și comunitate creativă.",
   "icons": [
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%23ff0050'/%3E%3Ctext x='96' y='120' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='80' fill='white'%3EK%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3ClinearGradient id='g1' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ff0050'/%3E%3Cstop offset='100%25' stop-color='%23ff3366'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='url(%23g1)'/%3E%3Ctext x='96' y='130' text-anchor='middle' font-family='system-ui' font-weight='900' font-size='90' fill='white' style='text-shadow: 0 4px 12px rgba(0,0,0,0.3)'%3EK%3C/text%3E%3C/svg%3E",
       "sizes": "192x192",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
     },
     {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='100' fill='%23ff0050'/%3E%3Ctext x='256' y='320' text-anchor='middle' font-family='Arial' font-weight='bold' font-size='220' fill='white'%3EK%3C/text%3E%3C/svg%3E",
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cdefs%3E%3ClinearGradient id='g2' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23ff0050'/%3E%3Cstop offset='100%25' stop-color='%23ff3366'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='512' height='512' rx='115' fill='url(%23g2)'/%3E%3Ctext x='256' y='345' text-anchor='middle' font-family='system-ui' font-weight='900' font-size='240' fill='white' style='text-shadow: 0 8px 24px rgba(0,0,0,0.4)'%3EK%3C/text%3E%3C/svg%3E",
       "sizes": "512x512",
       "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%23ff0050'/%3E%3Ctext x='96' y='130' text-anchor='middle' font-family='system-ui' font-weight='900' font-size='90' fill='white'%3EK%3C/text%3E%3C/svg%3E",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%23ff0050'/%3E%3Ctext x='256' y='345' text-anchor='middle' font-family='system-ui' font-weight='900' font-size='240' fill='white'%3EK%3C/text%3E%3C/svg%3E",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#ff0050",
   "background_color": "#000000",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "scope": "/",
-  "categories": ["entertainment", "social"],
-  "screenshots": [],
-  "prefer_related_applications": false
+  "categories": ["entertainment", "social", "video", "photo"],
+  "shortcuts": [
+    {
+      "name": "For You",
+      "short_name": "Feed",
+      "description": "Vezi feed-ul tău personalizat",
+      "url": "/?source=pwa_shortcut",
+      "icons": []
+    },
+    {
+      "name": "LIVE",
+      "short_name": "Live",
+      "description": "Urmărește live streaming",
+      "url": "/live?source=pwa_shortcut",
+      "icons": []
+    },
+    {
+      "name": "Upload",
+      "short_name": "Upload",
+      "description": "Încarcă un video nou",
+      "url": "/upload?source=pwa_shortcut",
+      "icons": []
+    }
+  ],
+  "display_override": ["standalone", "minimal-ui"],
+  "prefer_related_applications": false,
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
 }

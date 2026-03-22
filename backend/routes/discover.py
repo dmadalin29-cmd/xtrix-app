@@ -78,8 +78,64 @@ async def get_trending():
             "icon": icon_map.get(tag, "hash")
         })
 
-    # Get trending videos (most liked recently)
-    trending_videos = await db.videos.find({"visibility": "public"}).sort("likes", -1).limit(12).to_list(12)
+    # Get trending videos with smart algorithm
+    # Score = (engagement × 0.5) + (popularity × 0.3) + (recency × 0.2)
+    pipeline = [
+        {"$match": {"visibility": "public"}},
+        {"$addFields": {
+            "engagementRate": {
+                "$cond": [
+                    {"$gt": ["$views", 0]},
+                    {"$divide": [
+                        {"$add": [
+                            "$likes",
+                            {"$multiply": ["$commentCount", 2]},
+                            {"$multiply": ["$shares", 3]}
+                        ]},
+                        "$views"
+                    ]},
+                    0
+                ]
+            },
+            "popularityScore": {
+                "$add": [
+                    {"$multiply": ["$views", 0.001]},
+                    {"$multiply": ["$likes", 0.15]}
+                ]
+            },
+            "recencyScore": {
+                "$divide": [
+                    {"$subtract": [
+                        {"$toLong": "$$NOW"},
+                        {"$toLong": {"$dateFromString": {"dateString": "$createdAt"}}}
+                    ]},
+                    86400000
+                ]
+            }
+        }},
+        {"$addFields": {
+            "recencyBoost": {
+                "$cond": [
+                    {"$lte": ["$recencyScore", 7]},
+                    {"$subtract": [7, "$recencyScore"]},
+                    0
+                ]
+            }
+        }},
+        {"$addFields": {
+            "trendingScore": {
+                "$add": [
+                    {"$multiply": ["$engagementRate", 50]},
+                    {"$multiply": ["$popularityScore", 0.3]},
+                    {"$multiply": ["$recencyBoost", 0.2]}
+                ]
+            }
+        }},
+        {"$sort": {"trendingScore": -1}},
+        {"$limit": 12}
+    ]
+    
+    trending_videos = await db.videos.aggregate(pipeline).to_list(12)
     videos = []
     for doc in trending_videos:
         user = await db.users.find_one({"_id": doc.get("userId", "")})

@@ -84,10 +84,69 @@ async def video_doc_to_response(doc: dict) -> dict:
 @router.get("/feed")
 async def get_feed(page: int = Query(1, ge=1), limit: int = Query(10, le=30), user_id: str = Depends(get_optional_user)):
     skip = (page - 1) * limit
-    cursor = db.videos.find({"visibility": "public"}).sort("createdAt", -1).skip(skip).limit(limit + 1)
-    docs = await cursor.to_list(limit + 1)
+    
+    # Smart recommendation algorithm
+    # Score = (engagement × 0.4) + (popularity × 0.3) + (recency × 0.3)
+    pipeline = [
+        {"$match": {"visibility": "public"}},
+        {"$addFields": {
+            "engagementRate": {
+                "$cond": [
+                    {"$gt": ["$views", 0]},
+                    {"$divide": [
+                        {"$add": [
+                            "$likes",
+                            {"$multiply": ["$commentCount", 2]},
+                            {"$multiply": ["$shares", 3]}
+                        ]},
+                        "$views"
+                    ]},
+                    0
+                ]
+            },
+            "popularityScore": {
+                "$add": [
+                    {"$multiply": ["$views", 0.001]},
+                    {"$multiply": ["$likes", 0.1]}
+                ]
+            },
+            "recencyScore": {
+                "$divide": [
+                    {"$subtract": [
+                        {"$toLong": "$$NOW"},
+                        {"$toLong": {"$dateFromString": {"dateString": "$createdAt"}}}
+                    ]},
+                    86400000
+                ]
+            }
+        }},
+        {"$addFields": {
+            "recencyBoost": {
+                "$cond": [
+                    {"$lte": ["$recencyScore", 7]},
+                    {"$subtract": [7, "$recencyScore"]},
+                    0
+                ]
+            }
+        }},
+        {"$addFields": {
+            "finalScore": {
+                "$add": [
+                    {"$multiply": ["$engagementRate", 40]},
+                    {"$multiply": ["$popularityScore", 0.3]},
+                    {"$multiply": ["$recencyBoost", 0.3]}
+                ]
+            }
+        }},
+        {"$sort": {"finalScore": -1}},
+        {"$skip": skip},
+        {"$limit": limit + 1}
+    ]
+    
+    docs = await db.videos.aggregate(pipeline).to_list(limit + 1)
     has_more = len(docs) > limit
     docs = docs[:limit]
+    
     videos = []
     for doc in docs:
         v = await video_doc_to_response(doc)

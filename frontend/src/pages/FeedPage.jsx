@@ -222,6 +222,204 @@ const VideoCard = ({ video, isActive }) => {
   );
 };
 
+// Nested Reply Component
+const CommentReply = ({ reply, commentId, onLike }) => {
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(reply.likes || 0);
+
+  const handleLike = () => {
+    setLiked(!liked);
+    setLikeCount(liked ? likeCount - 1 : likeCount + 1);
+    onLike && onLike(commentId);
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -10 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="flex gap-2 ml-11 mt-3"
+    >
+      <Avatar className="w-7 h-7 flex-shrink-0">
+        <AvatarImage src={reply.user?.avatar} />
+        <AvatarFallback>{(reply.user?.username || 'U')[0]}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold text-white/80 font-body">{reply.user?.username}</span>
+          <span className="text-[10px] text-white/30 font-body">{reply.time}</span>
+        </div>
+        <p className="text-xs text-white/60 mt-0.5 leading-relaxed font-body">{reply.text}</p>
+        <button
+          onClick={handleLike}
+          className="flex items-center gap-1 text-[10px] text-white/30 hover:text-[#ff0050] transition-colors mt-1.5"
+        >
+          <Heart className={`w-3 h-3 ${liked ? 'fill-[#ff0050] text-[#ff0050]' : ''}`} />
+          {likeCount > 0 && likeCount}
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+// Single Comment Item with Nested Replies
+const CommentItem = ({ comment, videoId, onReplySuccess }) => {
+  const { requireAuth } = useAuth();
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(comment.likes || 0);
+  const [showReplyInput, setShowReplyInput] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [replies, setReplies] = useState([]);
+  const [showReplies, setShowReplies] = useState(false);
+  const [loadingReplies, setLoadingReplies] = useState(false);
+
+  const handleLike = async () => {
+    if (!requireAuth()) return;
+    const newLiked = !liked;
+    setLiked(newLiked);
+    setLikeCount(newLiked ? likeCount + 1 : likeCount - 1);
+    try {
+      const res = await videosAPI.likeComment(comment.id);
+      setLiked(res.data.liked);
+      setLikeCount(res.data.likeCount);
+    } catch (err) {
+      setLiked(!newLiked);
+      setLikeCount(newLiked ? likeCount : likeCount + 1);
+    }
+  };
+
+  const loadReplies = async () => {
+    if (replies.length > 0) {
+      setShowReplies(!showReplies);
+      return;
+    }
+    setLoadingReplies(true);
+    try {
+      const res = await videosAPI.getCommentReplies(comment.id);
+      setReplies(res.data.replies || []);
+      setShowReplies(true);
+    } catch (err) {
+      console.error('Failed to load replies:', err);
+    } finally {
+      setLoadingReplies(false);
+    }
+  };
+
+  const handleReplySubmit = async (e) => {
+    e.preventDefault();
+    if (!replyText.trim() || !requireAuth()) return;
+    try {
+      const res = await videosAPI.createCommentReply(comment.id, replyText);
+      setReplies([...replies, res.data]);
+      setReplyText('');
+      setShowReplyInput(false);
+      setShowReplies(true);
+      onReplySuccess && onReplySuccess();
+    } catch (err) {
+      console.error('Failed to post reply:', err);
+    }
+  };
+
+  return (
+    <div>
+      {/* Main Comment */}
+      <div className="flex gap-3">
+        <Avatar className="w-9 h-9 flex-shrink-0">
+          <AvatarImage src={comment.user?.avatar} />
+          <AvatarFallback>{(comment.user?.displayName || 'U')[0]}</AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-white/90 font-body">{comment.user?.username}</span>
+            <span className="text-[10px] text-white/30 font-body">{comment.time}</span>
+          </div>
+          <p className="text-sm text-white/70 mt-1 leading-relaxed font-body">{comment.text}</p>
+          <div className="flex items-center gap-4 mt-2">
+            <button
+              onClick={handleLike}
+              className={`flex items-center gap-1.5 text-[11px] transition-colors font-body ${
+                liked ? 'text-[#ff0050]' : 'text-white/40 hover:text-white/60'
+              }`}
+            >
+              <Heart className={`w-3.5 h-3.5 ${liked ? 'fill-[#ff0050]' : ''}`} />
+              {likeCount > 0 && formatNumber(likeCount)}
+            </button>
+            <button
+              onClick={() => setShowReplyInput(!showReplyInput)}
+              className="text-[11px] text-white/40 hover:text-white/60 transition-colors font-body"
+            >
+              Reply
+            </button>
+            {comment.replies > 0 && (
+              <button
+                onClick={loadReplies}
+                className="text-[11px] text-[#ff0050]/60 hover:text-[#ff0050] transition-colors font-bold font-body"
+              >
+                {loadingReplies ? (
+                  <span className="flex items-center gap-1">
+                    <div className="w-3 h-3 border border-white/20 border-t-[#ff0050] rounded-full animate-spin" />
+                    Loading...
+                  </span>
+                ) : showReplies ? (
+                  `Hide ${comment.replies} ${comment.replies === 1 ? 'reply' : 'replies'}`
+                ) : (
+                  `View ${comment.replies} ${comment.replies === 1 ? 'reply' : 'replies'}`
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Reply Input */}
+      <AnimatePresence>
+        {showReplyInput && (
+          <motion.form
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            onSubmit={handleReplySubmit}
+            className="ml-11 mt-3 flex items-center gap-2"
+          >
+            <input
+              type="text"
+              value={replyText}
+              onChange={(e) => setReplyText(e.target.value)}
+              placeholder={`Răspunde la @${comment.user?.username}...`}
+              autoFocus
+              className="flex-1 bg-white/[0.04] rounded-full px-3 py-2 text-xs text-white placeholder-white/30 outline-none border border-white/[0.08] focus:border-[#ff0050]/40 font-body"
+            />
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              type="submit"
+              disabled={!replyText.trim()}
+              className="px-3 py-2 rounded-full text-[10px] font-bold text-white disabled:opacity-30 transition-opacity font-body"
+              style={{ background: replyText.trim() ? '#ff0050' : 'rgba(255,255,255,0.06)' }}
+            >
+              Send
+            </motion.button>
+          </motion.form>
+        )}
+      </AnimatePresence>
+
+      {/* Nested Replies */}
+      <AnimatePresence>
+        {showReplies && replies.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="space-y-3"
+          >
+            {replies.map((reply) => (
+              <CommentReply key={reply.id} reply={reply} commentId={comment.id} />
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const CommentsPanel = ({ video, onClose }) => {
   const { requireAuth, isAuthenticated } = useAuth();
   const [commentText, setCommentText] = useState('');
@@ -255,12 +453,16 @@ const CommentsPanel = ({ video, onClose }) => {
     }
   };
 
+  const handleReplySuccess = () => {
+    // Optionally refresh comments to update reply count
+  };
+
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-50 flex items-center justify-center" onClick={onClose}>
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
       <motion.div initial={{ y: 50, opacity: 0, scale: 0.95 }} animate={{ y: 0, opacity: 1, scale: 1 }} exit={{ y: 50, opacity: 0, scale: 0.95 }} onClick={(e) => e.stopPropagation()} className="relative w-full max-w-md h-[70vh] rounded-2xl overflow-hidden flex flex-col" style={{ background: 'rgba(15,15,25,0.95)', backdropFilter: 'blur(40px)', border: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/[0.06]">
-          <h3 className="text-base font-bold text-white">Comments</h3>
+          <h3 className="text-base font-bold text-white font-display">Comments</h3>
           <button onClick={onClose} className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/[0.06] transition-colors">
             <X className="w-5 h-5 text-white/60" />
           </button>
@@ -273,36 +475,25 @@ const CommentsPanel = ({ video, onClose }) => {
             </div>
           ) : localComments.length === 0 ? (
             <div className="text-center py-10">
-              <p className="text-sm text-white/30">No comments yet. Be the first!</p>
+              <MessageCircle className="w-10 h-10 text-white/10 mx-auto mb-3" />
+              <p className="text-sm text-white/30 font-body">Niciun comentariu încă. Fii primul!</p>
             </div>
           ) : (
             localComments.map((comment, i) => (
-              <motion.div key={comment.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }} className="flex gap-3">
-                <Avatar className="w-9 h-9 flex-shrink-0">
-                  <AvatarImage src={comment.user?.avatar} />
-                  <AvatarFallback>{(comment.user?.displayName || 'U')[0]}</AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-white/90">{comment.user?.username}</span>
-                    <span className="text-[10px] text-white/30">{comment.time}</span>
-                  </div>
-                  <p className="text-sm text-white/70 mt-1 leading-relaxed">{comment.text}</p>
-                  <div className="flex items-center gap-4 mt-2">
-                    <button className="flex items-center gap-1.5 text-[11px] text-white/40 hover:text-white/60 transition-colors">
-                      <Heart className="w-3.5 h-3.5" />
-                      {formatNumber(comment.likes || 0)}
-                    </button>
-                    <button className="text-[11px] text-white/40 hover:text-white/60 transition-colors">Reply</button>
-                  </div>
-                </div>
+              <motion.div
+                key={comment.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.03 }}
+              >
+                <CommentItem comment={comment} videoId={video.id} onReplySuccess={handleReplySuccess} />
               </motion.div>
             ))
           )}
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 border-t border-white/[0.06] flex items-center gap-3">
-          <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={isAuthenticated ? "Add a comment..." : "Sign in to comment"} disabled={!isAuthenticated} className="flex-1 bg-white/[0.04] rounded-full px-4 py-2.5 text-sm text-white placeholder-white/30 outline-none border border-white/[0.06] focus:border-[#ff0050]/30 transition-colors disabled:opacity-50" />
+          <input type="text" value={commentText} onChange={(e) => setCommentText(e.target.value)} placeholder={isAuthenticated ? "Adaugă un comentariu..." : "Loghează-te pentru a comenta"} disabled={!isAuthenticated} className="flex-1 bg-white/[0.04] rounded-full px-4 py-2.5 text-sm text-white placeholder-white/30 outline-none border border-white/[0.06] focus:border-[#ff0050]/30 transition-colors disabled:opacity-50 font-body" />
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} type="submit" disabled={!commentText.trim() || !isAuthenticated} className="w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-30 transition-opacity" style={{ background: commentText.trim() && isAuthenticated ? '#ff0050' : 'rgba(255,255,255,0.06)' }}>
             <Send className="w-4 h-4 text-white" />
           </motion.button>
