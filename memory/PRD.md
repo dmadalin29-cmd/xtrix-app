@@ -75,11 +75,15 @@ Clonă 100% TikTok cu design ultra-modern dark theme + glassmorphic effects. Web
 5. Upload content
 6. Build following
 
-## Current Status
+## Current Status (Fork 3)
 - ✅ All core features implemented
 - ✅ Desktop UX polished
-- 🚧 **IN PROGRESS:** Mobile UX optimization (Live Viewer overlay redesign)
-- ⏳ **PENDING:** Viva Payments integration (needs API keys)
+- ✅ Mobile UX optimized (Bottom nav, overlay design, touch targets)
+- ✅ Performance optimized (React.memo, GPU acceleration, 60fps)
+- ✅ PWA Enhanced (manifest, service worker v2, installable)
+- ✅ Native apps ready (Capacitor iOS/Android configured)
+- ✅ Dark/Light mode (theme toggle functional)
+- ⏳ **PENDING:** Viva Payments integration (needs API keys from user)
 
 ## Known Issues & Fixes
 - ~~Sidebar overlap pe mobil~~ → FIXED (hidden lg:flex + bottom nav)
