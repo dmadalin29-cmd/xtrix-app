@@ -17,6 +17,7 @@ const AnalyticsPage = lazy(() => import('./pages/AnalyticsPage'));
 const LivePage = lazy(() => import('./pages/LivePage'));
 const GoLiveStudio = lazy(() => import('./pages/GoLiveStudio'));
 const WatchStreamPage = lazy(() => import('./pages/WatchStreamPage'));
+const AdminPanel = lazy(() => import('./pages/AdminPanel'));
 
 const LoadingFallback = () => (
   <div className="flex items-center justify-center h-full">
@@ -72,6 +73,7 @@ function AppContent() {
                     <Route path="/messages" element={<MessagesPage />} />
                     <Route path="/hashtag/:tag" element={<HashtagPage />} />
                     <Route path="/analytics" element={<AnalyticsPage />} />
+                    <Route path="/admin" element={<AdminPanel />} />
                   </Routes>
                 </Suspense>
               </Layout>

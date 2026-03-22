@@ -43,6 +43,7 @@ from routes.messages import router as messages_router, set_db as messages_set_db
 from routes.live import router as live_router, set_db as live_set_db
 from routes.wallet import router as wallet_router, set_db as wallet_set_db
 from routes.gifts import router as gifts_router, set_db as gifts_set_db
+from routes.admin import router as admin_router
 
 # Set DB references
 auth_set_db(db)
@@ -53,6 +54,8 @@ messages_set_db(db)
 live_set_db(db)
 wallet_set_db(db)
 gifts_set_db(db)
+from routes.admin import set_db as admin_set_db
+admin_set_db(db)
 
 # Include routers
 app.include_router(auth_router)
@@ -63,6 +66,7 @@ app.include_router(messages_router)
 app.include_router(live_router)
 app.include_router(wallet_router)
 app.include_router(gifts_router)
+app.include_router(admin_router)
 
 # Serve uploaded files
 UPLOAD_DIR = os.path.join(ROOT_DIR, "uploads")

@@ -38,6 +38,7 @@ class UserResponse(BaseModel):
     following: int = 0
     likes: int = 0
     verified: bool = False
+    isAdmin: bool = False
     walletBalance: int = 0
     totalEarned: int = 0
     totalSpent: int = 0

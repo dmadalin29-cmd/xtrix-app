@@ -30,6 +30,7 @@ def user_doc_to_response(doc: dict) -> UserResponse:
         following=doc.get("following", 0),
         likes=doc.get("likes", 0),
         verified=doc.get("verified", False),
+        isAdmin=doc.get("isAdmin", False),
         walletBalance=doc.get("walletBalance", 0),
         totalEarned=doc.get("totalEarned", 0),
         totalSpent=doc.get("totalSpent", 0),
@@ -72,10 +73,13 @@ async def register(data: UserCreate):
 
 @router.post("/login", response_model=AuthResponse)
 async def login(data: UserLogin):
-    user = await db.users.find_one({"email": data.email})
-    if not user or not pwd_context.verify(data.password, user.get("password", "")):
+    user_with_id = await db.users.find_one({"email": data.email})
+    if not user_with_id or not pwd_context.verify(data.password, user_with_id.get("password", "")):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    token = create_token(user["_id"])
+    user_id = str(user_with_id["_id"])  # Convert ObjectId to string for JWT
+    # Get user without _id for response
+    user = await db.users.find_one({"_id": user_with_id["_id"]}, {"_id": 0})
+    token = create_token(user_id)
     return AuthResponse(user=user_doc_to_response(user), token=token)
 
 

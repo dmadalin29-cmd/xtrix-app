@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import {
   Home, Compass, Users, Radio, User, Search, Upload, Bell,
   MessageCircle, Settings, LogOut, BadgeCheck, Plus,
-  ChevronDown, ChevronUp, Sparkles, Coins, Video, Sun, Moon
+  ChevronDown, ChevronUp, Sparkles, Coins, Video, Sun, Moon, Shield
 } from 'lucide-react';
 import { formatNumber } from '../../data/mockData';
 import { useAuth } from '../../contexts/AuthContext';
@@ -38,7 +38,7 @@ const navItems = [
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { requireAuth } = useAuth();
+  const { requireAuth, user } = useAuth();
   const [showAllSuggested, setShowAllSuggested] = useState(false);
   const [suggestedAccounts, setSuggestedAccounts] = useState([]);
 
@@ -103,6 +103,25 @@ const Sidebar = () => {
           );
         })}
       </nav>
+
+      {/* Admin Panel Link (csak adminoknak) */}
+      {user?.isAdmin && (
+        <>
+          <div className="mx-5 my-2 h-px bg-white/[0.06]" />
+          <div className="px-3">
+            <motion.div
+              whileHover={{ x: 4 }}
+              whileTap={{ scale: 0.98 }}
+              className={`nav-item ${location.pathname === '/admin' ? 'active' : ''}`}
+              onClick={() => navigate('/admin')}
+            >
+              <Shield className="w-5 h-5" strokeWidth={location.pathname === '/admin' ? 2.5 : 1.5} />
+              <span className={`text-[15px] ${location.pathname === '/admin' ? 'font-semibold' : 'font-medium'}`}>Admin Panel</span>
+              <span className="ml-auto px-2 py-0.5 bg-red-500/20 text-red-400 text-xs rounded-full font-semibold">ADMIN</span>
+            </motion.div>
+          </div>
+        </>
+      )}
 
       {/* Divider */}
       <div className="mx-5 my-4 h-px bg-white/[0.06]" />
