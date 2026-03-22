@@ -7,17 +7,16 @@ RUN apt-get update && apt-get install -y \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements first (for layer caching)
+# Copy requirements
 COPY requirements.txt .
-
-# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
 COPY . .
 
-# Expose port (Railway sets $PORT automatically)
+# Expose port (Railway provides $PORT)
 EXPOSE 8001
 
-# Start command
-CMD uvicorn server:app --host 0.0.0.0 --port ${PORT:-8001}
+# Start with shell to expand PORT variable
+CMD sh -c "uvicorn server:app --host 0.0.0.0 --port ${PORT:-8001}"
+
