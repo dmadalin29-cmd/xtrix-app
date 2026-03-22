@@ -31,6 +31,10 @@ def user_doc_to_response(doc: dict) -> UserResponse:
         following=doc.get("following", 0),
         likes=doc.get("likes", 0),
         verified=doc.get("verified", False),
+        isAdmin=doc.get("isAdmin", False),
+        walletBalance=doc.get("walletBalance", 0),
+        totalEarned=doc.get("totalEarned", 0),
+        totalSpent=doc.get("totalSpent", 0),
         createdAt=doc.get("createdAt", ""),
     )
 
